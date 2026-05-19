@@ -1,4 +1,4 @@
-﻿add_executable(HttpServer "src/HttpServer.cpp" "header/HttpServer.h")
+﻿add_executable(HttpServer "src/HttpServer.cpp" "header/HttpServer.h" "src/main.cpp" "src/Connection.cpp" "header/Connection.h")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET HttpServer PROPERTY CXX_STANDARD 20)
