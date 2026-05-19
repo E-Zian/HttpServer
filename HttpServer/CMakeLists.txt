@@ -1,12 +1,10 @@
-﻿# CMakeList.txt : CMake project for HttpServer, include source and define
-# project specific logic here.
-#
-
-# Add source to this project's executable.
-add_executable (HttpServer "HttpServer.cpp" "HttpServer.h")
+﻿add_executable(HttpServer "src/HttpServer.cpp" "header/HttpServer.h")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET HttpServer PROPERTY CXX_STANDARD 20)
 endif()
 
-# TODO: Add tests and install targets if needed.
+set(ASIO_INCLUDE_DIR $ENV{ASIO_HOME}/include)
+target_include_directories(HttpServer PRIVATE ${ASIO_INCLUDE_DIR})
+target_include_directories(HttpServer PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_include_directories(HttpServer PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/header)
