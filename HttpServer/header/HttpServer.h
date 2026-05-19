@@ -10,12 +10,13 @@ class HttpServer {
 public:
 	using tcp = asio::ip::tcp;
 
-	HttpServer(asio::io_context& io);
+	explicit HttpServer(asio::io_context& io);
 	~HttpServer();
 
 	static int totalConnections;
 
 	asio::awaitable<void> serverListen();
+
 
 private:
 	asio::io_context& io;

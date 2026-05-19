@@ -21,6 +21,7 @@ public:
 	}
 
 	asio::awaitable<void> startRead();
+	asio::awaitable<void> shutdown();
 
 private:
 	tcp::socket socket_;
@@ -29,7 +30,6 @@ private:
 
 	Connection(asio::io_context& io, tcp::socket&& connectionSocket, int connectionId);
 
-	asio::awaitable<void> shutdown();
 
 };
 

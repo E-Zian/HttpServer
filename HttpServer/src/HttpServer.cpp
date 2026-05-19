@@ -5,7 +5,7 @@
 
 int HttpServer::totalConnections{};
 
-HttpServer::HttpServer(asio::io_context& io) 
+HttpServer::HttpServer(asio::io_context& io)
 	:io{ io }, 
 	acceptor_{ io,tcp::endpoint(tcp::v4(),6767) } 
 {
@@ -32,8 +32,12 @@ asio::awaitable<void> HttpServer::serverListen() {
 
 }
 
-HttpServer::~HttpServer() {
-	for (auto& connection : ConnectionList) {
 
+
+HttpServer::~HttpServer() {
+	std::cout << "~HttpServer \n";
+	for (auto& connection : ConnectionList) {
+		asio::co_spawn(io,connection.lock()->shutdown(),asio::detached) ;
 	}
+	ConnectionList.clear();
 }

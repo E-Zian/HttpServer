@@ -1,16 +1,17 @@
 #include "Connection.h"
 #include <iostream>
+#include <asio.hpp>
 
 std::string Connection::serverShutdownMessage{ "The connection is closed due to the server shutting down" };
 
-Connection::Connection(asio::io_context& io, tcp::socket&& connectionSocket, int connectionId)
+Connection::Connection(asio::io_context& io, tcp::socket&& connectionSocket, const int connectionId)
 	:socket_{ std::move(connectionSocket) },
 	connectionId{ connectionId }
 {
 
 }
 
-Connection::pointer Connection::create(asio::io_context& io, tcp::socket&& connectionSocket,int connectionId) {
+Connection::pointer Connection::create(asio::io_context& io, tcp::socket&& connectionSocket, const int connectionId) {
 	return pointer(new Connection(io, std::move(connectionSocket), connectionId));
 }
 
@@ -31,7 +32,7 @@ asio::awaitable<void> Connection::startRead() {
 			if (len > 0) {
 				std::cout << "Connection ID (" << connectionId << ") : ";
 
-				std::cout.write(receivingBuffer.data(), len) << "\n";
+				std::cout.write(receivingBuffer.data(), static_cast<int>(len)) << "\n";
 			}
 
 		}
@@ -44,10 +45,9 @@ asio::awaitable<void> Connection::startRead() {
 	}
 }
 
-
 asio::awaitable<void> Connection::shutdown() {
 	auto self = shared_from_this();
-
-	co_await socket_.async_write_some()
+	co_await socket_.async_write_some(asio::buffer(receivingBuffer), asio::use_awaitable);
+	socket_.close();
 };
 
