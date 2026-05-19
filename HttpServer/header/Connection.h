@@ -9,13 +9,16 @@ class Connection :public std::enable_shared_from_this<Connection> {
 public:
 	using tcp = asio::ip::tcp;
 	using pointer = std::shared_ptr<Connection>;
+
 	static pointer create(asio::io_context& io, tcp::socket&& connectionSocket,int connectionId);
+
+	static std::string serverShutdownMessage;
+
+	~Connection();
 
 	tcp::socket& getSocket() {
 		return socket_;
 	}
-
-	~Connection();
 
 	asio::awaitable<void> startRead();
 
@@ -25,6 +28,8 @@ private:
 	std::array<char, 128> receivingBuffer{};
 
 	Connection(asio::io_context& io, tcp::socket&& connectionSocket, int connectionId);
+
+	asio::awaitable<void> shutdown();
 
 };
 

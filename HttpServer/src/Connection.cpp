@@ -1,6 +1,15 @@
 #include "Connection.h"
 #include <iostream>
 
+std::string Connection::serverShutdownMessage{ "The connection is closed due to the server shutting down" };
+
+Connection::Connection(asio::io_context& io, tcp::socket&& connectionSocket, int connectionId)
+	:socket_{ std::move(connectionSocket) },
+	connectionId{ connectionId }
+{
+
+}
+
 Connection::pointer Connection::create(asio::io_context& io, tcp::socket&& connectionSocket,int connectionId) {
 	return pointer(new Connection(io, std::move(connectionSocket), connectionId));
 }
@@ -35,9 +44,10 @@ asio::awaitable<void> Connection::startRead() {
 	}
 }
 
-Connection::Connection(asio::io_context& io, tcp::socket&& connectionSocket, int connectionId) 
-	:socket_{ std::move(connectionSocket) },
-	connectionId{ connectionId } 
-{
 
-}
+asio::awaitable<void> Connection::shutdown() {
+	auto self = shared_from_this();
+
+	co_await socket_.async_write_some()
+};
+
