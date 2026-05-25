@@ -13,15 +13,15 @@ public:
 	explicit HttpServer(asio::io_context& io);
 	~HttpServer();
 
-	static int totalConnections;
+	static int totalConnections_;
 
 	asio::awaitable<void> serverListen();
 
 
 private:
-	asio::io_context& io;
+	asio::io_context& io_;
 	tcp::acceptor acceptor_;
-	std::vector <std::weak_ptr<Connection>> ConnectionList;
+	std::vector <std::weak_ptr<Connection>> connectionList_;
 };
 
 

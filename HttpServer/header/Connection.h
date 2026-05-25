@@ -2,6 +2,7 @@
 #ifndef CONNECTION_H
 #define CONNECTION_H
 
+#include "HttpTypes.h"
 #include <memory>
 #include <asio.hpp>
 
@@ -12,7 +13,7 @@ public:
 
 	static pointer create(asio::io_context& io, tcp::socket&& connectionSocket,int connectionId);
 
-	static std::string serverShutdownMessage;
+	static std::string serverShutdownMessage_;
 
 	~Connection();
 
@@ -25,11 +26,13 @@ public:
 
 private:
 	tcp::socket socket_;
-	int connectionId;
-	std::array<char, 128> receivingBuffer{};
+	int connectionId_;
+	std::array<char, 128> receivingBuffer_{};
+	std::vector<char> requestReceived_{};
 
 	Connection(asio::io_context& io, tcp::socket&& connectionSocket, int connectionId);
 
+	static std::optional<ParsedRequest> parseRequest(std::string_view buffer);
 
 };
 
