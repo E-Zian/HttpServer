@@ -26,6 +26,7 @@ public:
 	asio::awaitable<void> shutdown();
 
 private:
+	asio::io_context& io_;
 	tcp::socket socket_;
 	int connectionId_;
 	std::array<char, 128> receivingBuffer_{};
@@ -37,11 +38,13 @@ private:
 
 	Connection(asio::io_context& io, tcp::socket&& connectionSocket, int connectionId);
 
-	std::optional<size_t> parseRequestForHeader(std::string_view buffer);
+	static std::optional<size_t> parseRequestForHeader(std::string_view buffer);
 
-	std::string_view getHeaderLine(std::string_view header,size_t& startingPosition);
+	static std::string_view getHeaderLine(std::string_view header,size_t& startingPosition);
 
-	void parseHeaderLine(std::string headerLine);
+	void parseHeaderLine(const std::string& headerLine);
+
+	asio::awaitable<void> writeResponse();
 
 	std::string generateResponse();
 };
