@@ -28,7 +28,7 @@ public:
 private:
 	tcp::socket socket_;
 	int connectionId_;
-	std::array<char, 256> receivingBuffer_{};
+	std::array<char, 128> receivingBuffer_{};
 	std::vector<char> requestReceived_{};
 	RequestObject request_;
 	std::string_view requestLine_;
@@ -37,12 +37,13 @@ private:
 
 	Connection(asio::io_context& io, tcp::socket&& connectionSocket, int connectionId);
 
-	static std::optional<RequestObject> parseRequest(std::string_view buffer);
+	std::optional<size_t> parseRequestForHeader(std::string_view buffer);
 
 	std::string_view getHeaderLine(std::string_view header,size_t& startingPosition);
 
 	void parseHeaderLine(std::string headerLine);
 
+	std::string generateResponse();
 };
 
 

@@ -30,59 +30,51 @@ asio::awaitable<void> Connection::startRead() {
 			co_await socket_.async_read_some(asio::buffer(receivingBuffer_),asio::redirect_error(asio::use_awaitable, ec))
 		};
 
-		if (ec == asio::error::eof) {
-			std::optional<RequestObject> request{
-				Connection::parseRequest(std::string_view(requestReceived_.data(), requestReceived_.size()))
-			};
-
-			if (request.has_value()) {
-				// Has header and body
-				request_ = request.value();
-
-				// Process header
-				size_t startingPosition{};
-				requestLine_ = getHeaderLine(request_.Header, startingPosition);
-
-				while (startingPosition != request_.Header.length()) {
-					std::string headerLine{ getHeaderLine(request_.Header, startingPosition) };
-					parseHeaderLine(headerLine);
-
-				}
-
-				std::cout << "Connection ID (" << connectionId_ << ") Request Received" << "\n";
-			}
-			else {
-
-				std::cout << "Connection ID (" << connectionId_ << ") Request Failed" << "\n";
-			}
-
-			break;
-		}
-
 		std::cout.write(receivingBuffer_.data(), len);
 		requestReceived_.insert(requestReceived_.end(), receivingBuffer_.begin(), receivingBuffer_.begin() + len);
 
+		std::optional<size_t> delimiterPosition = parseRequestForHeader(std::string_view(requestReceived_.data(), requestReceived_.size()));
+
+		if (!delimiterPosition.has_value()) {
+			continue;
+		}
+
+		request_.Header = std::string_view(requestReceived_.data(), delimiterPosition.value());
+
+		size_t startingPosition{};
+		requestLine_ = getHeaderLine(request_.Header, startingPosition);
+
+		while (startingPosition != request_.Header.length()) {
+			std::string headerLine{ getHeaderLine(request_.Header, startingPosition) };
+			parseHeaderLine(headerLine);
+
+		}
 
 		if (ec) {
-			std::cout << "Error Connection ID (" << connectionId_ << ") Failed Read: " << ec << "\n";
+			std::cout << "Error Connection ID (" << connectionId_ << ") Request Failed: " << ec << "\n";
+			break;
 		}
+
+		std::cout << "Connection ID (" << connectionId_ << ") Request Received" << "\n";
+		break;
+
+
 
 	}
 }
 
-std::optional<RequestObject> Connection::parseRequest(std::string_view buffer) {
+
+std::optional<size_t> Connection::parseRequestForHeader(std::string_view buffer) {
 	const std::string delimiter{ "\r\n\r\n" };
 	const size_t delimiterPosition{ buffer.find(delimiter) };
 
-	// Need add some sort of security here i think to check \n\r\n\r
 	if (delimiterPosition == std::string::npos) {
 		return std::nullopt;
 	}
 
-	return RequestObject{
-		buffer.substr(0, delimiterPosition), buffer.substr(delimiterPosition + delimiter.length())
-	};
-}
+	return delimiterPosition;
+};
+
 
 std::string_view Connection::getHeaderLine(std::string_view header, size_t& startingPosition) {
 	const char* delimiter{ "\r\n" };
@@ -113,9 +105,13 @@ void Connection::parseHeaderLine(std::string headerLine) {
 	size_t delimiterPosition{ headerLine.find(delimiter) };
 
 	if (delimiterPosition == std::string::npos) {
-		std::cout << "\":\" not found in header line : "<<headerLine << "\n";
+		std::cout << "\":\" not found in header line : " << headerLine << "\n";
 		return;
 	}
 	parsedHeader_[headerLine.substr(0, delimiterPosition)] = trim(headerLine.substr(delimiterPosition + 1));
 
 }
+
+//std::string generateResponse() {
+//
+//}
