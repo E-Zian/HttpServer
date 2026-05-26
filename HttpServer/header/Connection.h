@@ -3,8 +3,9 @@
 #define CONNECTION_H
 
 #include "HttpTypes.h"
-#include <memory>
 #include <asio.hpp>
+#include <memory>
+#include <unordered_map>
 
 class Connection :public std::enable_shared_from_this<Connection> {
 public:
@@ -27,12 +28,20 @@ public:
 private:
 	tcp::socket socket_;
 	int connectionId_;
-	std::array<char, 128> receivingBuffer_{};
+	std::array<char, 256> receivingBuffer_{};
 	std::vector<char> requestReceived_{};
+	RequestObject request_;
+	std::string_view requestLine_;
+
+	std::unordered_map<std::string, std::string> parsedHeader_{};
 
 	Connection(asio::io_context& io, tcp::socket&& connectionSocket, int connectionId);
 
-	static std::optional<ParsedRequest> parseRequest(std::string_view buffer);
+	static std::optional<RequestObject> parseRequest(std::string_view buffer);
+
+	std::string_view getHeaderLine(std::string_view header,size_t& startingPosition);
+
+	void parseHeaderLine(std::string headerLine);
 
 };
 

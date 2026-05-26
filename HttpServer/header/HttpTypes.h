@@ -3,7 +3,7 @@
 #define HTTPSERVER_HTTPTYPES_H
 #include <string>
 
-struct ParsedRequest {
+struct RequestObject {
     std::string_view Header;
     std::string_view Body;
 };
