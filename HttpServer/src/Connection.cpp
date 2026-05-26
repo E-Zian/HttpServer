@@ -3,7 +3,6 @@
 #include <iostream>
 #include <asio.hpp>
 
-//testing to see if contribution is working
 std::string Connection::serverShutdownMessage_{ "The connection is closed due to the server shutting down" };
 
 Connection::Connection(asio::io_context& io, tcp::socket&& connectionSocket, const int connectionId)
