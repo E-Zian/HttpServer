@@ -36,6 +36,8 @@ private:
 
 	std::unordered_map<std::string, std::string> parsedHeader_{};
 
+	std::unordered_map<std::string, std::string> responseHeader_{};
+
 	Connection(asio::io_context& io, tcp::socket&& connectionSocket, int connectionId);
 
 	static std::optional<size_t> parseRequestForHeader(std::string_view buffer);
@@ -47,6 +49,8 @@ private:
 	asio::awaitable<void> writeResponse();
 
 	std::string generateResponse();
+
+	std::string generateDummyResponse();
 };
 
 

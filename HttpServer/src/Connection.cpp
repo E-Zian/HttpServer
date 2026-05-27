@@ -120,6 +120,22 @@ void Connection::parseHeaderLine(const std::string& headerLine) {
 }
 
 std::string Connection::generateResponse() {
+	std::string response ="HTTP/1.1 200 OK\r\n";
+
+	for (const auto& header: responseHeader_) {
+		response += header.first + ": " + header.second + "\r\n";
+	}
+
+	response+="\r\n";
+
+	if (responseHeader_.contains("Content-Length")) {
+		// add body response here
+	}
+
+	return response;
+}
+
+std::string Connection::generateDummyResponse() {
 	std::string response =
 	"HTTP/1.1 200 OK\r\n"
 	"Content-Type: text/html\r\n"
@@ -131,8 +147,9 @@ std::string Connection::generateResponse() {
 	return response;
 }
 
+
 asio::awaitable<void> Connection::writeResponse() {
 	auto self {shared_from_this()};
 
-	co_await asio::async_write(socket_, asio::buffer(generateResponse()),asio::use_awaitable);
+	co_await asio::async_write(socket_, asio::buffer(generateDummyResponse()),asio::use_awaitable);
 }
