@@ -4,7 +4,9 @@
 #include <string>
 #include <algorithm>
 
+namespace Helper {
+	std::string trim(std::string text);
 
-std::string trim(std::string text);
+}
 
 #endif 

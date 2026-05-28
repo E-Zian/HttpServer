@@ -1,6 +1,6 @@
 #include "Helper.h"
 
-std::string trim(std::string text) {
+std::string Helper::trim(std::string text) {
 	text.erase(text.begin(), std::find_if(text.begin(), text.end(), [](unsigned char c) {
 		return !std::isspace(c);
 		}

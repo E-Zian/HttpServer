@@ -116,7 +116,7 @@ void Connection::parseHeaderLine(const std::string& headerLine) {
 		std::cout << "\":\" not found in header line : " << headerLine << "\n";
 		return;
 	}
-	parsedHeader_[headerLine.substr(0, delimiterPosition)] = trim(headerLine.substr(delimiterPosition + 1));
+	parsedHeader_[headerLine.substr(0, delimiterPosition)] = Helper::trim(headerLine.substr(delimiterPosition + 1));
 }
 
 std::string Connection::generateResponse() {
