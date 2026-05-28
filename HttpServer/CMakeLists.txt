@@ -8,9 +8,8 @@ if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET HttpServer PROPERTY CXX_STANDARD 20)
 endif()
 
-string(REPLACE "\\" "/" ASIO_HOME_FIXED "$ENV{ASIO_HOME}")
-set(ASIO_INCLUDE_DIR "${ASIO_HOME_FIXED}/include")
+find_package(asio REQUIRED)
+target_link_libraries(HttpServer PRIVATE asio::asio)
 
-target_include_directories(HttpServer PRIVATE ${ASIO_INCLUDE_DIR})
 target_include_directories(HttpServer PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_include_directories(HttpServer PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/header)
