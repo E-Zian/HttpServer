@@ -2,7 +2,7 @@
 #include "Helper.h"
 #include <iostream>
 #include <asio.hpp>
-
+#include <fmt/core.h>
 std::string Connection::serverShutdownMessage_{ "The connection is closed due to the server shutting down" };
 
 Connection::Connection(asio::io_context& io, tcp::socket&& connectionSocket, const int connectionId)

@@ -8,11 +8,12 @@ if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET HttpServer PROPERTY CXX_STANDARD 20)
 endif()
 
-find_package(asio REQUIRED)
-target_link_libraries(HttpServer PRIVATE asio::asio)
 
 find_package(fmt CONFIG REQUIRED)
 target_link_libraries(HttpServer PRIVATE fmt::fmt)
+
+find_package(asio REQUIRED)
+target_link_libraries(HttpServer PRIVATE asio::asio)
 
 target_include_directories(HttpServer PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_include_directories(HttpServer PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/header)
