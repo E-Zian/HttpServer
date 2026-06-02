@@ -3,21 +3,6 @@
 #include <iostream>
 #include <asio.hpp>
 #include <fmt/core.h>
-#include <fmt/color.h>
-
-namespace {
-    template<typename... Args>
-    void displayError(fmt::format_string<Args...> fmt_string, Args &&... args) {
-        fmt::print(fmt::fg(fmt::color::red), "Server Error : ");
-        fmt::print("{}\n", fmt::format(fmt_string, std::forward<Args>(args)...));
-    }
-
-    template<typename... Args>
-    void displayMessage(fmt::format_string<Args...> fmt_str, Args &&... args) {
-        fmt::print(fmt::fg(fmt::color::green), "Server Info : ");
-        fmt::print("{}\n", fmt::format(fmt_str, std::forward<Args>(args)...));
-    }
-}
 
 std::string Connection::serverShutdownMessage_{"The connection is closed due to the server shutting down"};
 
@@ -32,8 +17,7 @@ Connection::pointer Connection::create(asio::io_context &io, tcp::socket &&conne
 }
 
 Connection::~Connection() {
-    displayMessage("Connection ID ({}) Disconnected\n", connectionId_);
-    std::cout << "Connection ID (" << connectionId_ << ") Disconnected" << "\n";
+    Helper::displayMessage("Connection ID ({}) Disconnected\n", connectionId_);
 }
 
 asio::awaitable<void> Connection::startRead() {
@@ -46,7 +30,8 @@ asio::awaitable<void> Connection::startRead() {
                                              asio::redirect_error(asio::use_awaitable, ec))
         };
 
-        std::cout.write(receivingBuffer_.data(), len);
+        // std::cout.write(receivingBuffer_.data(), len);
+        Helper::displayMessage(std::string_view(receivingBuffer_.data(), len));
         requestReceived_.insert(requestReceived_.end(), receivingBuffer_.begin(), receivingBuffer_.begin() + len);
 
         std::optional<size_t> delimiterPosition = parseRequestForHeader(
@@ -67,13 +52,10 @@ asio::awaitable<void> Connection::startRead() {
         }
 
         if (ec) {
-            displayError("Error Connection ID ({}) Request Failed: {}", connectionId_, ec.message());
-            std::cout << "Error Connection ID (" << connectionId_ << ") Request Failed: " << ec << "\n";
+            Helper::displayError("Error Connection ID ({}) Request Failed: {}", connectionId_, ec.message());
             break;
         }
-        displayMessage("Connection ID ({}) Request Received\n", connectionId_);
-
-        std::cout << "Connection ID (" << connectionId_ << ") Request Received" << "\n";
+        Helper::displayMessage("Connection ID ({}) Request Received\n", connectionId_);
 
         // Has Body
         if (parsedHeader_.contains("Content-Length")) {
@@ -130,7 +112,7 @@ void Connection::parseHeaderLine(const std::string &headerLine) {
     const size_t delimiterPosition{headerLine.find(delimiter)};
 
     if (delimiterPosition == std::string::npos) {
-        std::cout << "\":\" not found in header line : " << headerLine << "\n";
+        Helper::displayError("\":\" not found in header line : {} \n",headerLine);
         return;
     }
     parsedHeader_[headerLine.substr(0, delimiterPosition)] = Helper::trim(headerLine.substr(delimiterPosition + 1));

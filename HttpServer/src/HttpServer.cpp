@@ -1,4 +1,5 @@
-﻿#include "HttpServer.h"
+﻿#include "Helper.h"
+#include "HttpServer.h"
 #include "Connection.h"
 #include <asio.hpp>
 #include <iostream>
@@ -17,15 +18,18 @@ HttpServer::HttpServer(asio::io_context& io)
 asio::awaitable<void> HttpServer::serverListen() {
 	while (true) {
 		try {
-			std::cout << "Waiting for connection \n";
+			Helper::displayMessage("Waiting for connection \n");
 			Connection::pointer connection{ Connection::create(io_,co_await acceptor_.async_accept(asio::use_awaitable), ++HttpServer::totalConnections_) };
 			connectionList_.push_back(connection);
-			std::cout << "Connection ID : "<< HttpServer::totalConnections_<<" Connected \n\n";
+
+			Helper::displayMessage("Connection ID : {} Connected \n",HttpServer::totalConnections_);
+
 			asio::co_spawn(io_, connection->startRead(), asio::detached);
 			
 		}
 		catch (std::exception& ex) {
-			std::cout << "Server Error : " << ex.what() << "\n";
+
+			Helper::displayError("{}\n",ex.what());
 		}
 
 	}
