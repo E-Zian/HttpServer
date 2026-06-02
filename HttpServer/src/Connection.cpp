@@ -3,153 +3,170 @@
 #include <iostream>
 #include <asio.hpp>
 #include <fmt/core.h>
-std::string Connection::serverShutdownMessage_{ "The connection is closed due to the server shutting down" };
+#include <fmt/color.h>
 
-Connection::Connection(asio::io_context& io, tcp::socket&& connectionSocket, const int connectionId)
-	: io_{io},
-	socket_{ std::move(connectionSocket) },
-	connectionId_{ connectionId }
-{
+namespace {
+    template<typename... Args>
+    void displayError(fmt::format_string<Args...> fmt_string, Args &&... args) {
+        fmt::print(fmt::fg(fmt::color::red), "Server Error : ");
+        fmt::print("{}\n", fmt::format(fmt_string, std::forward<Args>(args)...));
+    }
+
+    template<typename... Args>
+    void displayMessage(fmt::format_string<Args...> fmt_str, Args &&... args) {
+        fmt::print(fmt::fg(fmt::color::green), "Server Info : ");
+        fmt::print("{}\n", fmt::format(fmt_str, std::forward<Args>(args)...));
+    }
 }
 
-Connection::pointer Connection::create(asio::io_context& io, tcp::socket&& connectionSocket, const int connectionId) {
-	return pointer(new Connection(io, std::move(connectionSocket), connectionId));
+std::string Connection::serverShutdownMessage_{"The connection is closed due to the server shutting down"};
+
+Connection::Connection(asio::io_context &io, tcp::socket &&connectionSocket, const int connectionId)
+    : io_{io},
+      socket_{std::move(connectionSocket)},
+      connectionId_{connectionId} {
+}
+
+Connection::pointer Connection::create(asio::io_context &io, tcp::socket &&connectionSocket, const int connectionId) {
+    return pointer(new Connection(io, std::move(connectionSocket), connectionId));
 }
 
 Connection::~Connection() {
-	std::cout << "Connection ID (" << connectionId_ << ") Disconnected" << "\n";
+    displayMessage("Connection ID ({}) Disconnected\n", connectionId_);
+    std::cout << "Connection ID (" << connectionId_ << ") Disconnected" << "\n";
 }
 
 asio::awaitable<void> Connection::startRead() {
-	auto self { shared_from_this()};
+    auto self{shared_from_this()};
 
-	while (true) {
+    while (true) {
+        asio::error_code ec;
+        const size_t len{
+            co_await socket_.async_read_some(asio::buffer(receivingBuffer_),
+                                             asio::redirect_error(asio::use_awaitable, ec))
+        };
 
-		asio::error_code ec;
-		const size_t len{
-			co_await socket_.async_read_some(asio::buffer(receivingBuffer_),asio::redirect_error(asio::use_awaitable, ec))
-		};
+        std::cout.write(receivingBuffer_.data(), len);
+        requestReceived_.insert(requestReceived_.end(), receivingBuffer_.begin(), receivingBuffer_.begin() + len);
 
-		std::cout.write(receivingBuffer_.data(), len);
-		requestReceived_.insert(requestReceived_.end(), receivingBuffer_.begin(), receivingBuffer_.begin() + len);
+        std::optional<size_t> delimiterPosition = parseRequestForHeader(
+            std::string_view(requestReceived_.data(), requestReceived_.size()));
 
-		std::optional<size_t> delimiterPosition = parseRequestForHeader(std::string_view(requestReceived_.data(), requestReceived_.size()));
+        if (!delimiterPosition.has_value()) {
+            continue;
+        }
 
-		if (!delimiterPosition.has_value()) {
-			continue;
-		}
+        request_.Header = std::string_view(requestReceived_.data(), delimiterPosition.value());
 
-		request_.Header = std::string_view(requestReceived_.data(), delimiterPosition.value());
+        size_t startingPosition{};
+        requestLine_ = getHeaderLine(request_.Header, startingPosition);
 
-		size_t startingPosition{};
-		requestLine_ = getHeaderLine(request_.Header, startingPosition);
+        while (startingPosition != request_.Header.length()) {
+            std::string headerLine{getHeaderLine(request_.Header, startingPosition)};
+            parseHeaderLine(headerLine);
+        }
 
-		while (startingPosition != request_.Header.length()) {
-			std::string headerLine{ getHeaderLine(request_.Header, startingPosition) };
-			parseHeaderLine(headerLine);
+        if (ec) {
+            displayError("Error Connection ID ({}) Request Failed: {}", connectionId_, ec.message());
+            std::cout << "Error Connection ID (" << connectionId_ << ") Request Failed: " << ec << "\n";
+            break;
+        }
+        displayMessage("Connection ID ({}) Request Received\n", connectionId_);
 
-		}
+        std::cout << "Connection ID (" << connectionId_ << ") Request Received" << "\n";
 
-		if (ec) {
-			std::cout << "Error Connection ID (" << connectionId_ << ") Request Failed: " << ec << "\n";
-			break;
-		}
+        // Has Body
+        if (parsedHeader_.contains("Content-Length")) {
+            const int contentLength{std::stoi(parsedHeader_["Content-Length"])};
 
-		std::cout << "Connection ID (" << connectionId_ << ") Request Received" << "\n";
+            // 4 represents the double carriage return and new line
+            request_.Body = std::string_view(&receivingBuffer_[delimiterPosition.value() + static_cast<size_t>(4)],
+                                             contentLength);
+        }
 
-		// Has Body
-		if (parsedHeader_.contains("Content-Length")) {
-			const int contentLength{std::stoi(parsedHeader_["Content-Length"])};
-
-			// 4 represents the double carriage return and new line
-			request_.Body = std::string_view(&receivingBuffer_[delimiterPosition.value() + static_cast<size_t>(4)], contentLength);
-
-		}
-
-		asio::co_spawn(io_,writeResponse(),asio::detached);
-		break;
-	}
+        asio::co_spawn(io_, writeResponse(), asio::detached);
+        break;
+    }
 }
 
 
 std::optional<size_t> Connection::parseRequestForHeader(std::string_view buffer) {
-	const std::string delimiter{ "\r\n\r\n" };
-	const size_t delimiterPosition{ buffer.find(delimiter) };
+    const std::string delimiter{"\r\n\r\n"};
+    const size_t delimiterPosition{buffer.find(delimiter)};
 
-	if (delimiterPosition == std::string::npos) {
-		return std::nullopt;
-	}
+    if (delimiterPosition == std::string::npos) {
+        return std::nullopt;
+    }
 
-	return delimiterPosition;
+    return delimiterPosition;
 };
 
 
-std::string_view Connection::getHeaderLine(std::string_view header, size_t& startingPosition) {
-	const auto delimiter{ "\r\n" };
-	const size_t delimiterPosition{ header.find(delimiter, startingPosition) };
+std::string_view Connection::getHeaderLine(std::string_view header, size_t &startingPosition) {
+    const auto delimiter{"\r\n"};
+    const size_t delimiterPosition{header.find(delimiter, startingPosition)};
 
-	const size_t oldStartingPosition{ startingPosition };
+    const size_t oldStartingPosition{startingPosition};
 
-	if (delimiterPosition == std::string::npos) {
-		startingPosition = header.length();
-		return header.substr(oldStartingPosition);
-	}
+    if (delimiterPosition == std::string::npos) {
+        startingPosition = header.length();
+        return header.substr(oldStartingPosition);
+    }
 
-	startingPosition = delimiterPosition + 2;
-	return header.substr(oldStartingPosition, delimiterPosition - oldStartingPosition);
-
+    startingPosition = delimiterPosition + 2;
+    return header.substr(oldStartingPosition, delimiterPosition - oldStartingPosition);
 }
 
 
 asio::awaitable<void> Connection::shutdown() {
-	auto self = shared_from_this();
-	co_await socket_.async_write_some(asio::buffer(receivingBuffer_), asio::use_awaitable);
-	socket_.close();
+    auto self = shared_from_this();
+    co_await socket_.async_write_some(asio::buffer(receivingBuffer_), asio::use_awaitable);
+    socket_.close();
 };
 
-void Connection::parseHeaderLine(const std::string& headerLine) {
-	const auto delimiter{ ":" };
-	// add a security injection of \r\n here??
-	const size_t delimiterPosition{ headerLine.find(delimiter) };
+void Connection::parseHeaderLine(const std::string &headerLine) {
+    const auto delimiter{":"};
+    // add a security injection of \r\n here??
+    const size_t delimiterPosition{headerLine.find(delimiter)};
 
-	if (delimiterPosition == std::string::npos) {
-		std::cout << "\":\" not found in header line : " << headerLine << "\n";
-		return;
-	}
-	parsedHeader_[headerLine.substr(0, delimiterPosition)] = Helper::trim(headerLine.substr(delimiterPosition + 1));
+    if (delimiterPosition == std::string::npos) {
+        std::cout << "\":\" not found in header line : " << headerLine << "\n";
+        return;
+    }
+    parsedHeader_[headerLine.substr(0, delimiterPosition)] = Helper::trim(headerLine.substr(delimiterPosition + 1));
 }
 
 std::string Connection::generateResponse() {
-	std::string response ="HTTP/1.1 200 OK\r\n";
+    std::string response = "HTTP/1.1 200 OK\r\n";
 
-	for (const auto& header: responseHeader_) {
-		response += header.first + ": " + header.second + "\r\n";
-	}
+    for (const auto &header: responseHeader_) {
+        response += header.first + ": " + header.second + "\r\n";
+    }
 
-	response+="\r\n";
+    response += "\r\n";
 
-	if (responseHeader_.contains("Content-Length")) {
-		// add body response here
-	}
+    if (responseHeader_.contains("Content-Length")) {
+        // add body response here
+    }
 
-	return response;
+    return response;
 }
 
 std::string Connection::generateDummyResponse() {
-	std::string response =
-	"HTTP/1.1 200 OK\r\n"
-	"Content-Type: text/html\r\n"
-	"Content-Length: 27\r\n"
-	"Connection: close\r\n"
-	"\r\n"
-	"<html>Hello World!</html>";
+    std::string response =
+            "HTTP/1.1 200 OK\r\n"
+            "Content-Type: text/html\r\n"
+            "Content-Length: 27\r\n"
+            "Connection: close\r\n"
+            "\r\n"
+            "<html>Hello World!</html>";
 
-	return response;
+    return response;
 }
 
 
 asio::awaitable<void> Connection::writeResponse() {
-	auto self {shared_from_this()};
+    auto self{shared_from_this()};
 
-	co_await asio::async_write(socket_, asio::buffer(generateDummyResponse()),asio::use_awaitable);
+    co_await asio::async_write(socket_, asio::buffer(generateDummyResponse()), asio::use_awaitable);
 }
