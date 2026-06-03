@@ -32,9 +32,7 @@ private:
 	std::array<char, 128> receivingBuffer_{};
 	std::vector<char> requestReceived_{};
 	RequestObject request_;
-	std::vector<std::string_view> requestLine_{};
-	std::unordered_map<std::string, std::string> parsedHeader_{};
-	std::unordered_map<std::string, std::string> responseHeader_{};
+	ParsedRequestObject parsedRequest_;
 
 	Connection(asio::io_context& io, tcp::socket&& connectionSocket, int connectionId);
 
@@ -44,7 +42,7 @@ private:
 
 	void parseHeaderLine(const std::string& headerLine);
 
-	void parseRequestLine(std::string_view requestLine);
+	bool parseRequestLine(std::string_view requestLine);
 
 	asio::awaitable<void> writeResponse();
 

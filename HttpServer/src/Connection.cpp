@@ -32,8 +32,7 @@ asio::awaitable<void> Connection::startRead() {
         
         requestReceived_.insert(requestReceived_.end(), receivingBuffer_.begin(), receivingBuffer_.begin() + len);
 
-        std::optional<size_t> delimiterPosition = parseRequestForHeader(
-            std::string_view(requestReceived_.data(), requestReceived_.size()));
+        std::optional<size_t> delimiterPosition = parseRequestForHeader(std::string_view(requestReceived_.data(), requestReceived_.size()));
 
         if (!delimiterPosition.has_value()) {
             continue;
@@ -46,8 +45,15 @@ asio::awaitable<void> Connection::startRead() {
 
         size_t startingPosition{};
 
-        auto requestLine{ getHeaderLine(request_.Header, startingPosition) };
-        parseRequestLine(requestLine);
+        const auto requestLine{ getHeaderLine(request_.Header, startingPosition) };
+
+        if (!parseRequestLine(requestLine)) {
+            Helper::displayError("Error Connection ID ({}) Request Failed: {}", connectionId_, "Incorrect Request Line Received");
+
+            // Send internal server error bs
+            break;
+        };
+
 
         while (startingPosition != request_.Header.length()) {
             std::string headerLine{getHeaderLine(request_.Header, startingPosition)};
@@ -61,12 +67,13 @@ asio::awaitable<void> Connection::startRead() {
         Helper::displayMessage("Connection ID ({}) Request Received\n", connectionId_);
 
         // Has Body
-        if (parsedHeader_.contains("Content-Length")) {
-            const int contentLength{std::stoi(parsedHeader_["Content-Length"])};
+        if (parsedRequest_.header.contains("Content-Length")) {
+            const int contentLength{std::stoi(parsedRequest_.header["Content-Length"])};
 
             // 4 represents the double carriage return and new line
             request_.Body = std::string_view(&receivingBuffer_[delimiterPosition.value() + static_cast<size_t>(4)],
                                              contentLength);
+            parsedRequest_.body=request_.Body;
         }
 
         asio::co_spawn(io_, writeResponse(), asio::detached);
@@ -111,48 +118,56 @@ asio::awaitable<void> Connection::shutdown() {
 
 void Connection::parseHeaderLine(const std::string &headerLine) {
     const auto delimiter{":"};
-    // add a security injection of \r\n here??
     const size_t delimiterPosition{headerLine.find(delimiter)};
 
     if (delimiterPosition == std::string::npos) {
         Helper::displayError("\":\" not found in header line : {} \n",headerLine);
         return;
     }
-    parsedHeader_[headerLine.substr(0, delimiterPosition)] = Helper::trim(headerLine.substr(delimiterPosition + 1));
+    parsedRequest_.header[headerLine.substr(0, delimiterPosition)] = Helper::trim(headerLine.substr(delimiterPosition + 1));
 }
 
-void Connection::parseRequestLine(std::string_view requestLine) {
+bool Connection::parseRequestLine(std::string_view requestLine) {
+    std::vector<std::string_view> requestLineComponents{};
     size_t start{};
     while (start < requestLine.length()) {
         size_t end{ requestLine.find(' ',start) };
 
         if (end == std::string::npos) {
-            requestLine_.push_back(requestLine.substr(start, requestLine.length() - start));
+            requestLineComponents.push_back(requestLine.substr(start, requestLine.length() - start));
             break;
         }
         else {
-            requestLine_.push_back(requestLine.substr(start, end - start));
+            requestLineComponents.push_back(requestLine.substr(start, end - start));
             start = end+1;
         }
     }
+    if (requestLineComponents.size() == 3) {
+        parsedRequest_.method = requestLineComponents[0];
+        parsedRequest_.route = requestLineComponents[1];
+        parsedRequest_.httpVersion = requestLineComponents[2];
+        return true;
+    }
+
+    return false;
 }
 
 
-std::string Connection::generateResponse() {
-    std::string response = "HTTP/1.1 200 OK\r\n";
-
-    for (const auto &header: responseHeader_) {
-        response += header.first + ": " + header.second + "\r\n";
-    }
-
-    response += "\r\n";
-
-    if (responseHeader_.contains("Content-Length")) {
-        // add body response here
-    }
-
-    return response;
-}
+// std::string Connection::generateResponse() {
+//     std::string response = "HTTP/1.1 200 OK\r\n";
+//
+//     for (const auto &header: responseHeader_) {
+//         response += header.first + ": " + header.second + "\r\n";
+//     }
+//
+//     response += "\r\n";
+//
+//     if (responseHeader_.contains("Content-Length")) {
+//         // add body response here
+//     }
+//
+//     return response;
+// }
 
 std::string Connection::generateDummyResponse() {
     std::string response =

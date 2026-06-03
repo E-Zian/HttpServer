@@ -3,6 +3,7 @@
 #define Helper_H
 #include <string>
 #include <algorithm>
+#include <vector>
 #include <fmt/color.h>
 namespace Helper {
 	std::string trim(std::string text);
@@ -18,6 +19,8 @@ namespace Helper {
 		fmt::print(fmt::fg(fmt::color::green), "Server Info : ");
 		fmt::print("{}\n", fmt::format(fmt_str, std::forward<Args>(args)...));
 	}
+
+	std::vector<std::string> split(const std::string& text, const char delimiter);
 
 
 }
