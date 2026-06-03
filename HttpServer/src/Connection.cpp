@@ -45,7 +45,9 @@ asio::awaitable<void> Connection::startRead() {
         request_.Header = std::string_view(requestReceived_.data(), delimiterPosition.value());
 
         size_t startingPosition{};
-        requestLine_ = getHeaderLine(request_.Header, startingPosition);
+
+        auto requestLine{ getHeaderLine(request_.Header, startingPosition) };
+        parseRequestLine(requestLine);
 
         while (startingPosition != request_.Header.length()) {
             std::string headerLine{getHeaderLine(request_.Header, startingPosition)};
@@ -118,6 +120,23 @@ void Connection::parseHeaderLine(const std::string &headerLine) {
     }
     parsedHeader_[headerLine.substr(0, delimiterPosition)] = Helper::trim(headerLine.substr(delimiterPosition + 1));
 }
+
+void Connection::parseRequestLine(std::string_view requestLine) {
+    size_t start{};
+    while (start < requestLine.length()) {
+        size_t end{ requestLine.find(' ',start) };
+
+        if (end == std::string::npos) {
+            requestLine_.push_back(requestLine.substr(start, requestLine.length() - start));
+            break;
+        }
+        else {
+            requestLine_.push_back(requestLine.substr(start, end - start));
+            start = end+1;
+        }
+    }
+}
+
 
 std::string Connection::generateResponse() {
     std::string response = "HTTP/1.1 200 OK\r\n";

@@ -12,8 +12,3 @@ std::string Helper::trim(std::string text) {
     return text;
 }
 
-// For runtime issue
-void Helper::displayMessage(std::string_view msg) {
-    fmt::print(fmt::fg(fmt::color::green), "Server Info : ");
-    fmt::print("{}\n", msg);
-}

@@ -7,8 +7,6 @@
 namespace Helper {
 	std::string trim(std::string text);
 
-	void displayMessage(std::string_view msg) ;
-
 	template<typename... Args>
 	void displayError(fmt::format_string<Args...> fmt_string, Args &&... args) {
 		fmt::print(fmt::fg(fmt::color::red), "Server Error : ");
