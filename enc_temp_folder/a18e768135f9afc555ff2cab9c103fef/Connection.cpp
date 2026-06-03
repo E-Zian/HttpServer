@@ -40,7 +40,7 @@ asio::awaitable<void> Connection::startRead() {
         }
 
         // Display Header
-        Helper::displayMessage("Headers Received from Connection Id ({})\n\n{}\n", connectionId_,std::string_view(requestReceived_.data(), delimiterPosition.value()));
+        Helper::displayMessage("Headers Received for Connection Id ({})\n\n{}\n", connectionId_,std::string_view(requestReceived_.data(), delimiterPosition.value()));
 
         request_.Header = std::string_view(requestReceived_.data(), delimiterPosition.value());
 
