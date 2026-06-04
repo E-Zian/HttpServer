@@ -21,13 +21,11 @@ public:
 	}
 
 	asio::awaitable<void> startRead();
-	asio::awaitable<void> shutdown();
 
 private:
 	asio::io_context& io_;
 	tcp::socket socket_;
 	int connectionId_;
-	std::array<char, 128> receivingBuffer_{};
 	std::vector<char> requestReceived_{};
 	RequestObject request_;
 	ParsedRequestObject parsedRequest_;

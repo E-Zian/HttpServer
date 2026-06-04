@@ -39,8 +39,6 @@ asio::awaitable<void> HttpServer::serverListen() {
 
 HttpServer::~HttpServer() {
 	std::cout << "~HttpServer \n";
-	for (auto& connection : connectionList_) {
-		asio::co_spawn(io_,connection.lock()->shutdown(),asio::detached) ;
-	}
+
 	connectionList_.clear();
 }
