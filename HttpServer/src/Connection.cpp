@@ -4,7 +4,65 @@
 #include <asio.hpp>
 #include <fmt/core.h>
 
-std::string Connection::serverShutdownMessage_{"The connection is closed due to the server shutting down"};
+namespace {
+    std::optional<size_t> parseRequestForHeader(std::string_view buffer) {
+        const std::string delimiter{ "\r\n\r\n" };
+        const size_t delimiterPosition{ buffer.find(delimiter) };
+
+        if (delimiterPosition == std::string::npos) {
+            return std::nullopt;
+        }
+
+        return delimiterPosition;
+    };
+    
+    std::string_view getHeaderLine(std::string_view header, size_t& startingPosition) {
+        const auto delimiter{ "\r\n" };
+        const size_t delimiterPosition{ header.find(delimiter, startingPosition) };
+
+        const size_t oldStartingPosition{ startingPosition };
+
+        if (delimiterPosition == std::string::npos) {
+            startingPosition = header.length();
+            return header.substr(oldStartingPosition);
+        }
+
+        startingPosition = delimiterPosition + 2;
+        return header.substr(oldStartingPosition, delimiterPosition - oldStartingPosition);
+    }
+    
+    std::optional<std::pair<std::string,std::string>> parseHeaderLine(const std::string& headerLine) {
+        const auto delimiter{ ":" };
+        const size_t delimiterPosition{ headerLine.find(delimiter) };
+
+        if (delimiterPosition == std::string::npos) {
+            return std::nullopt;
+        }
+        return std::make_pair(headerLine.substr(0, delimiterPosition), Helper::trim(headerLine.substr(delimiterPosition + 1)));
+    }
+
+    std::optional<std::vector<std::string_view>> parseRequestLine(std::string_view requestLine) {
+        std::vector<std::string_view> requestLineComponents{};
+        size_t start{};
+        while (start < requestLine.length()) {
+            size_t end{ requestLine.find(' ',start) };
+
+            if (end == std::string::npos) {
+                requestLineComponents.push_back(requestLine.substr(start, requestLine.length() - start));
+                break;
+            }
+            else {
+                requestLineComponents.push_back(requestLine.substr(start, end - start));
+                start = end + 1;
+            }
+        }
+        if (requestLineComponents.size() < 3) {
+            return std::nullopt;
+        }
+        return requestLineComponents;
+
+    }
+}
 
 Connection::Connection(asio::io_context &io, tcp::socket &&connectionSocket, const int connectionId)
     : io_{io},
@@ -47,17 +105,30 @@ asio::awaitable<void> Connection::startRead() {
 
         const auto requestLine{ getHeaderLine(request_.Header, startingPosition) };
 
-        if (!parseRequestLine(requestLine)) {
-            Helper::displayError("Error Connection ID ({}) Request Failed: {}", connectionId_, "Incorrect Request Line Received");
+        auto parseRequestLineComponents{ parseRequestLine(requestLine) };
 
-            // Send internal server error bs
+        if (!parseRequestLineComponents.has_value()) {
+            Helper::displayError("Error Connection ID ({}) Request Failed: {}", connectionId_, "Malformed Request Line Received");
+
+            // Send internal server error 
             break;
         };
+
+        parsedRequest_.method = parseRequestLineComponents.value()[0];
+        parsedRequest_.route = parseRequestLineComponents.value()[1];
+        parsedRequest_.httpVersion = parseRequestLineComponents.value()[2];
 
 
         while (startingPosition != request_.Header.length()) {
             std::string headerLine{getHeaderLine(request_.Header, startingPosition)};
-            parseHeaderLine(headerLine);
+
+            std::optional<std::pair<std::string, std::string>> headerPair{ parseHeaderLine(headerLine) };
+            if (!headerPair.has_value()) {
+                Helper::displayError("Error Connection ID ({}) Request Failed: {}{}", connectionId_, "Malformed header line : ", headerLine);
+
+                // send bad request
+                break;
+            }
         }
 
         if (ec) {
@@ -82,92 +153,11 @@ asio::awaitable<void> Connection::startRead() {
 }
 
 
-std::optional<size_t> Connection::parseRequestForHeader(std::string_view buffer) {
-    const std::string delimiter{"\r\n\r\n"};
-    const size_t delimiterPosition{buffer.find(delimiter)};
-
-    if (delimiterPosition == std::string::npos) {
-        return std::nullopt;
-    }
-
-    return delimiterPosition;
-};
-
-
-std::string_view Connection::getHeaderLine(std::string_view header, size_t &startingPosition) {
-    const auto delimiter{"\r\n"};
-    const size_t delimiterPosition{header.find(delimiter, startingPosition)};
-
-    const size_t oldStartingPosition{startingPosition};
-
-    if (delimiterPosition == std::string::npos) {
-        startingPosition = header.length();
-        return header.substr(oldStartingPosition);
-    }
-
-    startingPosition = delimiterPosition + 2;
-    return header.substr(oldStartingPosition, delimiterPosition - oldStartingPosition);
-}
-
-
 asio::awaitable<void> Connection::shutdown() {
     auto self = shared_from_this();
     co_await socket_.async_write_some(asio::buffer(receivingBuffer_), asio::use_awaitable);
     socket_.close();
 };
-
-void Connection::parseHeaderLine(const std::string &headerLine) {
-    const auto delimiter{":"};
-    const size_t delimiterPosition{headerLine.find(delimiter)};
-
-    if (delimiterPosition == std::string::npos) {
-        Helper::displayError("\":\" not found in header line : {} \n",headerLine);
-        return;
-    }
-    parsedRequest_.header[headerLine.substr(0, delimiterPosition)] = Helper::trim(headerLine.substr(delimiterPosition + 1));
-}
-
-bool Connection::parseRequestLine(std::string_view requestLine) {
-    std::vector<std::string_view> requestLineComponents{};
-    size_t start{};
-    while (start < requestLine.length()) {
-        size_t end{ requestLine.find(' ',start) };
-
-        if (end == std::string::npos) {
-            requestLineComponents.push_back(requestLine.substr(start, requestLine.length() - start));
-            break;
-        }
-        else {
-            requestLineComponents.push_back(requestLine.substr(start, end - start));
-            start = end+1;
-        }
-    }
-    if (requestLineComponents.size() == 3) {
-        parsedRequest_.method = requestLineComponents[0];
-        parsedRequest_.route = requestLineComponents[1];
-        parsedRequest_.httpVersion = requestLineComponents[2];
-        return true;
-    }
-
-    return false;
-}
-
-
-// std::string Connection::generateResponse() {
-//     std::string response = "HTTP/1.1 200 OK\r\n";
-//
-//     for (const auto &header: responseHeader_) {
-//         response += header.first + ": " + header.second + "\r\n";
-//     }
-//
-//     response += "\r\n";
-//
-//     if (responseHeader_.contains("Content-Length")) {
-//         // add body response here
-//     }
-//
-//     return response;
-// }
 
 std::string Connection::generateDummyResponse() {
     std::string response =

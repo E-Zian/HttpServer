@@ -14,8 +14,6 @@ public:
 
 	static pointer create(asio::io_context& io, tcp::socket&& connectionSocket,int connectionId);
 
-	static std::string serverShutdownMessage_;
-
 	~Connection();
 
 	tcp::socket& getSocket() {
@@ -35,14 +33,6 @@ private:
 	ParsedRequestObject parsedRequest_;
 
 	Connection(asio::io_context& io, tcp::socket&& connectionSocket, int connectionId);
-
-	static std::optional<size_t> parseRequestForHeader(std::string_view buffer);
-
-	static std::string_view getHeaderLine(std::string_view header,size_t& startingPosition);
-
-	void parseHeaderLine(const std::string& headerLine);
-
-	bool parseRequestLine(std::string_view requestLine);
 
 	asio::awaitable<void> writeResponse();
 
