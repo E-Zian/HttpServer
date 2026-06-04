@@ -8,7 +8,7 @@
 class Router
 {
 public:
-	void addRoute(Method method, std::string_view path, std::function<void(ParsedRequestObject&, Response&)> handler);
+	void addRoute(Method method, std::string& path, std::function<void(ParsedRequestObject&, Response&)> handler);
 
 private:
 	std::vector<Route> routes_;

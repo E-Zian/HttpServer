@@ -44,7 +44,7 @@ enum class Method {
 
 struct Route {
     Method method;
-    std::string_view path;
+    std::vector<std::string> pathSegments;
     std::function<void(ParsedRequestObject&, Response&)> handler;
 };
 

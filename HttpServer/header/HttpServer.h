@@ -2,6 +2,7 @@
 #ifndef HTTPSERVER_H
 #define HTTPSERVER_H
 
+#include "Router.h"
 #include "Connection.h"
 #include <asio.hpp>
 #include <vector>
@@ -22,6 +23,7 @@ private:
 	tcp::acceptor acceptor_;
 	std::vector <std::weak_ptr<Connection>> connectionList_;
 	static int totalConnections_;
+	Router router_{};
 
 };
 
