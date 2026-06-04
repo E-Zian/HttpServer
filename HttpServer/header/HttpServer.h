@@ -11,9 +11,8 @@ public:
 	using tcp = asio::ip::tcp;
 
 	explicit HttpServer(asio::io_context& io);
-	~HttpServer();
 
-	static int totalConnections_;
+	~HttpServer();
 
 	asio::awaitable<void> serverListen();
 
@@ -22,6 +21,8 @@ private:
 	asio::io_context& io_;
 	tcp::acceptor acceptor_;
 	std::vector <std::weak_ptr<Connection>> connectionList_;
+	static int totalConnections_;
+
 };
 
 

@@ -153,6 +153,7 @@ asio::awaitable<void> Connection::startRead() {
 		// 4 represents the double carriage return and new line
 		request_.Body = std::string_view(&requestReceived_[delimiterPosition.value() + static_cast<size_t>(4)],
 			contentLength);
+
 		parsedRequest_.body = request_.Body;
 	}
 

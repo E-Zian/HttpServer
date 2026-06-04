@@ -19,7 +19,10 @@ asio::awaitable<void> HttpServer::serverListen() {
 	while (true) {
 		try {
 			Helper::displayMessage("Waiting for connection \n");
-			Connection::pointer connection{ Connection::create(io_,co_await acceptor_.async_accept(asio::use_awaitable), ++HttpServer::totalConnections_) };
+
+			asio::ip::tcp::socket socket{ co_await acceptor_.async_accept(asio::use_awaitable) };
+
+			Connection::pointer connection{ Connection::create(io_,std::move(socket), ++HttpServer::totalConnections_)};
 			connectionList_.push_back(connection);
 
 			Helper::displayMessage("Connection ID : {} Connected \n",HttpServer::totalConnections_);
@@ -38,7 +41,6 @@ asio::awaitable<void> HttpServer::serverListen() {
 
 
 HttpServer::~HttpServer() {
-	std::cout << "~HttpServer \n";
-
+	Helper::displayMessage("Server Closed");
 	connectionList_.clear();
 }
