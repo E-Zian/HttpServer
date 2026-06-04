@@ -30,7 +30,7 @@ private:
 
 	asio::awaitable<void> writeResponse(std::string_view response);
 
-	std::string generateResponse();
+	// std::string generateResponse();
 
 	std::string generateDummyResponse();
 };
