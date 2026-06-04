@@ -29,4 +29,3 @@ std::vector<std::string> Helper::split(const std::string& text, const char delim
     return stringComponents;
 }
 
-

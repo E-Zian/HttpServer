@@ -1,10 +1,13 @@
 #pragma once
 #ifndef Helper_H
 #define Helper_H
+
 #include <string>
 #include <algorithm>
 #include <vector>
 #include <fmt/color.h>
+#include <optional>
+
 namespace Helper {
 	std::string trim(std::string text);
 
@@ -21,7 +24,6 @@ namespace Helper {
 	}
 
 	std::vector<std::string> split(const std::string& text, const char delimiter);
-
 
 }
 

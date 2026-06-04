@@ -62,6 +62,22 @@ namespace {
 		return requestLineComponents;
 
 	}
+
+	std::optional<std::string_view> statusToString(HttpStatus status) {
+		switch (status)
+		{
+		case HttpStatus::OK:
+			return "OK";
+		case HttpStatus::BAD_REQUEST:
+			return "BAD_REQUEST";
+		case HttpStatus::NOT_FOUND:
+			return "NOT_FOUND";
+		case HttpStatus::SERVER_ERROR:
+			return "SERVER_ERROR";
+		default:
+			return std::nullopt;
+		}
+	}
 }
 
 Connection::Connection(asio::io_context& io, tcp::socket&& connectionSocket, const int connectionId)
@@ -159,7 +175,7 @@ asio::awaitable<void> Connection::startRead() {
 
 	Helper::displayMessage("Connection ID ({}) Request Received\n", connectionId_);
 
-	asio::co_spawn(io_, writeResponse(), asio::detached);
+	asio::co_spawn(io_, writeResponse(generateDummyResponse()), asio::detached);
 }
 
 
@@ -176,8 +192,8 @@ std::string Connection::generateDummyResponse() {
 }
 
 
-asio::awaitable<void> Connection::writeResponse() {
+asio::awaitable<void> Connection::writeResponse(std::string_view response) {
 	auto self{ shared_from_this() };
 
-	co_await asio::async_write(socket_, asio::buffer(generateDummyResponse()), asio::use_awaitable);
+	co_await asio::async_write(socket_, asio::buffer(response), asio::use_awaitable);
 }

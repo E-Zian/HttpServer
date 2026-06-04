@@ -16,10 +16,6 @@ public:
 
 	~Connection();
 
-	tcp::socket& getSocket() {
-		return socket_;
-	}
-
 	asio::awaitable<void> startRead();
 
 private:
@@ -32,7 +28,7 @@ private:
 
 	Connection(asio::io_context& io, tcp::socket&& connectionSocket, int connectionId);
 
-	asio::awaitable<void> writeResponse();
+	asio::awaitable<void> writeResponse(std::string_view response);
 
 	std::string generateResponse();
 

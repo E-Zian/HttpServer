@@ -3,6 +3,7 @@
 #define HTTPSERVER_HTTPTYPES_H
 #include <string>
 #include <unordered_map>
+#include <functional>
 
 struct RequestObject {
     std::string_view Header;
@@ -23,6 +24,28 @@ enum class HttpStatus {
     BAD_REQUEST = 400,
     NOT_FOUND = 404,
     SERVER_ERROR = 500
+};
+
+struct Response {
+    HttpStatus statusLine;
+    std::unordered_map<std::string, std::string> header{};
+    std::string body;
+};
+
+enum class Method {
+    GET,
+    POST,
+    PUT,
+    DELETE,
+    PATCH,
+    HEAD,
+    OPTIONS
+};
+
+struct Route {
+    Method method;
+    std::string_view path;
+    std::function<void(ParsedRequestObject&, Response&)> handler;
 };
 
 #endif //HTTPSERVER_HTTPTYPES_H

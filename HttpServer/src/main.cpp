@@ -1,4 +1,5 @@
 #include "HttpServer.h"
+#include "Router.h"
 #include <asio.hpp>
 #include <fmt/color.h>
 
@@ -13,6 +14,8 @@ int main() {
 #endif
 
     asio::io_context io;
+    Router router{};
+
     HttpServer server(io);
 
     io.run();

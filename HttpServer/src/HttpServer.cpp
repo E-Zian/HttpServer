@@ -10,7 +10,6 @@ HttpServer::HttpServer(asio::io_context& io)
 	:io_{ io },
 	acceptor_{ io,tcp::endpoint(tcp::v4(),6767) } 
 {
-	connectionList_.reserve(10);
 
 	asio::co_spawn(io, serverListen(), asio::detached);
 }

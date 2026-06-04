@@ -1,5 +1,5 @@
 ﻿add_executable(HttpServer "src/HttpServer.cpp" "header/HttpServer.h" "src/main.cpp" "src/Connection.cpp" "header/Connection.h" "header/Helper.h" "src/Helper.cpp"
-        header/HttpTypes.h)
+        header/HttpTypes.h "src/Router.cpp" "header/Router.h")
 
 # Define Windows version for ASIO
 target_compile_definitions(HttpServer PRIVATE _WIN32_WINNT=0x0A00)
