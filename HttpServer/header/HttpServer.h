@@ -11,7 +11,7 @@ class HttpServer {
 public:
 	using tcp = asio::ip::tcp;
 
-	explicit HttpServer(asio::io_context& io,Router& router);
+	HttpServer(asio::io_context& io,Router& router);
 
 	~HttpServer();
 
