@@ -2,6 +2,7 @@
 #include "Router.h"
 #include <asio.hpp>
 #include <fmt/color.h>
+
 int main() {
 #ifdef _WIN32
 #include <windows.h>
@@ -13,8 +14,9 @@ int main() {
 #endif
 
     asio::io_context io;
+    Router router{};
 
-    HttpServer server(io);
+    HttpServer server(io,router);
     asio::co_spawn(io, server.serverListen(), asio::detached);
 
     io.run();

@@ -11,7 +11,7 @@ class HttpServer {
 public:
 	using tcp = asio::ip::tcp;
 
-	explicit HttpServer(asio::io_context& io);
+	explicit HttpServer(asio::io_context& io,Router& router);
 
 	~HttpServer();
 
@@ -23,7 +23,7 @@ private:
 	tcp::acceptor acceptor_;
 	std::vector <std::weak_ptr<Connection>> connectionList_;
 	static int totalConnections_;
-	Router router_{};
+	Router& router_;
 
 };
 

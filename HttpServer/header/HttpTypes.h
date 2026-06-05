@@ -4,10 +4,11 @@
 #include <string>
 #include <unordered_map>
 #include <functional>
+#include <memory>
 
 struct RequestObject {
-    std::string_view Header;
-    std::string_view Body;
+    std::string_view header;
+    std::string_view body;
 };
 
 struct ParsedRequestObject {
@@ -43,9 +44,10 @@ enum class Method {
 };
 
 struct Route {
-    Method method;
-    std::vector<std::string> pathSegments;
-    std::function<void(ParsedRequestObject&, Response&)> handler;
+    std::string segmentName;
+    std::unordered_map<Method, std::function<void(ParsedRequestObject&, Response&)>> handler{};
+    std::unordered_map<std::string, std::unique_ptr<Route>> children{};
+    std::unique_ptr<Route> parameterChild{};
 };
 
 #endif //HTTPSERVER_HTTPTYPES_H

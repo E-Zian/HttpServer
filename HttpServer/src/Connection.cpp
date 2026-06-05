@@ -124,11 +124,11 @@ asio::awaitable<void> Connection::startRead() {
 	// Display Header
 	Helper::displayMessage("Headers Received from Connection Id ({})\n\n{}\n", connectionId_, std::string_view(requestReceived_.data(), delimiterPosition.value()));
 
-	request_.Header = std::string_view(requestReceived_.data(), delimiterPosition.value());
+	request_.header = std::string_view(requestReceived_.data(), delimiterPosition.value());
 
 	size_t startingPosition{};
 
-	const auto requestLine{ getHeaderLine(request_.Header, startingPosition) };
+	const auto requestLine{ getHeaderLine(request_.header, startingPosition) };
 
 	auto parseRequestLineComponents{ parseRequestLine(requestLine) };
 
@@ -144,8 +144,8 @@ asio::awaitable<void> Connection::startRead() {
 	parsedRequest_.httpVersion = parseRequestLineComponents.value()[2];
 
 
-	while (startingPosition != request_.Header.length()) {
-		std::string headerLine{ getHeaderLine(request_.Header, startingPosition) };
+	while (startingPosition != request_.header.length()) {
+		std::string headerLine{ getHeaderLine(request_.header, startingPosition) };
 
 		std::optional<std::pair<std::string, std::string>> headerPair{ parseHeaderLine(headerLine) };
 		if (!headerPair.has_value()) {
@@ -167,10 +167,10 @@ asio::awaitable<void> Connection::startRead() {
 		requestReceived_.insert(requestReceived_.end(), receivingBodyBuffer.begin(), receivingBodyBuffer.begin() + len);
 
 		// 4 represents the double carriage return and new line
-		request_.Body = std::string_view(&requestReceived_[delimiterPosition.value() + static_cast<size_t>(4)],
+		request_.body = std::string_view(&requestReceived_[delimiterPosition.value() + static_cast<size_t>(4)],
 			contentLength);
 
-		parsedRequest_.body = request_.Body;
+		parsedRequest_.body = request_.body;
 	}
 
 	Helper::displayMessage("Connection ID ({}) Request Received\n", connectionId_);

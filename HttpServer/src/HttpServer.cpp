@@ -6,39 +6,33 @@
 
 int HttpServer::totalConnections_{};
 
-HttpServer::HttpServer(asio::io_context& io)
-	:io_{ io },
-	acceptor_{ io,tcp::endpoint(tcp::v4(),6767) }
-{
+HttpServer::HttpServer(asio::io_context &io, Router &router)
+    : io_{io},
+      acceptor_{io, tcp::endpoint(tcp::v4(), 6767)},
+      router_{router} {
 }
 
 asio::awaitable<void> HttpServer::serverListen() {
-	while (true) {
-		try {
-			Helper::displayMessage("Waiting for connection \n");
+    while (true) {
+        try {
+            Helper::displayMessage("Waiting for connection \n");
 
-			asio::ip::tcp::socket socket{ co_await acceptor_.async_accept(asio::use_awaitable) };
+            asio::ip::tcp::socket socket{co_await acceptor_.async_accept(asio::use_awaitable)};
 
-			Connection::pointer connection{ Connection::create(io_,std::move(socket), ++HttpServer::totalConnections_) };
-			connectionList_.push_back(connection);
+            Connection::pointer connection{Connection::create(io_, std::move(socket), ++HttpServer::totalConnections_)};
+            connectionList_.push_back(connection);
 
-			Helper::displayMessage("Connection ID : {} Connected \n", HttpServer::totalConnections_);
+            Helper::displayMessage("Connection ID : {} Connected \n", HttpServer::totalConnections_);
 
-			asio::co_spawn(io_, connection->startRead(), asio::detached);
-
-		}
-		catch (std::exception& ex) {
-
-			Helper::displayError("{}\n", ex.what());
-		}
-
-	}
-
+            asio::co_spawn(io_, connection->startRead(), asio::detached);
+        } catch (std::exception &ex) {
+            Helper::displayError("{}\n", ex.what());
+        }
+    }
 }
 
 
 HttpServer::~HttpServer() {
-	Helper::displayMessage("Server Closed");
-	connectionList_.clear();
+    Helper::displayMessage("Server Closed");
+    connectionList_.clear();
 }
-
