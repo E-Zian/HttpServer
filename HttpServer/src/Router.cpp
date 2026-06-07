@@ -6,8 +6,8 @@ Router::Router() : root_(std::make_unique<Route>()) {
 };
 
 void Router::addRoute(const Method method, const std::string &path,
-                      const std::function<void(ParsedRequestObject &, Response &)> &handler) {
-    std::vector<std::string> pathSegments{Helper::split(path, '/')};
+                      const std::function<void(ParsedRequestObject &, Response &)> &handler) const {
+    const std::vector<std::string> pathSegments{Helper::split(path, '/')};
 
     Route *currentRoute = root_.get();
 
@@ -28,4 +28,16 @@ void Router::addRoute(const Method method, const std::string &path,
 
     currentRoute->handler[method] = handler;
 
+}
+
+Response Router::dispatch(const std::string& path, ParsedRequestObject &request) {
+    std::vector<std::string> pathSegments{Helper::split(path,'/')};
+    Response response;
+    try {
+
+    }catch (std::exception &ex) {
+        response.status = HttpStatus::BAD_REQUEST;
+        response.header["Content-Type"] = "application/json";
+        response.body = "An error has ";
+    }
 }

@@ -8,7 +8,9 @@
 class Router
 {
 public:
-	void addRoute(Method method, const std::string& path, const std::function<void(ParsedRequestObject&, Response&)> &handler);
+	void addRoute(Method method, const std::string& path, const std::function<void(ParsedRequestObject&, Response&)> &handler) const;
+
+	Response dispatch(const std::string& path,ParsedRequestObject& request);
 
 	Router();
 

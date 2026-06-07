@@ -28,7 +28,7 @@ enum class HttpStatus {
 };
 
 struct Response {
-    HttpStatus statusLine;
+    HttpStatus status;
     std::unordered_map<std::string, std::string> header{};
     std::string body;
 };
