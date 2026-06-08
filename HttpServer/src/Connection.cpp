@@ -63,31 +63,48 @@ namespace {
 
 	}
 
-	std::optional<std::string_view> statusToString(HttpStatus status) {
+	std::string statusToStatusLine(const HttpStatus status) {
+		std::string httpVersion{ "HTTP/1.1 " };
+
 		switch (status)
 		{
 		case HttpStatus::OK:
-			return "OK";
+			return httpVersion + "200 OK";
+
 		case HttpStatus::BAD_REQUEST:
-			return "BAD_REQUEST";
+			return httpVersion + "400 Bad Request";
+
 		case HttpStatus::NOT_FOUND:
-			return "NOT_FOUND";
+			return httpVersion + "404 Not Found";
+
 		case HttpStatus::SERVER_ERROR:
-			return "SERVER_ERROR";
+			return httpVersion + "500 Internal Server Error";
+
 		default:
-			return std::nullopt;
+			return httpVersion + "500 Internal Server Error";
 		}
 	}
+
+	std::string headerToString(const std::unordered_map<std::string, std::string>& header) {
+		std::string headerLines{};
+		headerLines.reserve(header.size() * 50);
+
+		for (auto& headerPair : header) {
+			headerLines += headerPair.first + ": " + headerPair.second + "\r\n";
+		}
+		return headerLines;
+	}
+
 }
 
-Connection::Connection(asio::io_context& io, tcp::socket&& connectionSocket, const int connectionId)
-	: io_{ io },
+Connection::Connection( tcp::socket&& connectionSocket, const int connectionId)
+	: 
 	socket_{ std::move(connectionSocket) },
 	connectionId_{ connectionId } {
 }
 
-Connection::pointer Connection::create(asio::io_context& io, tcp::socket&& connectionSocket, const int connectionId) {
-	return pointer(new Connection(io, std::move(connectionSocket), connectionId));
+Connection::pointer Connection::create(tcp::socket&& connectionSocket, const int connectionId) {
+	return pointer(new Connection(std::move(connectionSocket), connectionId));
 }
 
 Connection::~Connection() {
@@ -122,8 +139,13 @@ asio::awaitable<void> Connection::startRead() {
 	}
 
 	// Display Header
+	if (!delimiterPosition) {
+		// Used to remove warning
+	
+		co_return;
+	}
 	Helper::displayMessage("Headers Received from Connection Id ({})\n\n{}\n", connectionId_, std::string_view(requestReceived_.data(), delimiterPosition.value()));
-
+	
 	request_.header = std::string_view(requestReceived_.data(), delimiterPosition.value());
 
 	size_t startingPosition{};
@@ -175,25 +197,18 @@ asio::awaitable<void> Connection::startRead() {
 
 	Helper::displayMessage("Connection ID ({}) Request Received\n", connectionId_);
 
-	asio::co_spawn(io_, writeResponse(generateDummyResponse()), asio::detached);
+	Response response{ ResponseFactory::dummy() };
+	co_await writeResponse(response);
 }
 
-
-std::string Connection::generateDummyResponse() {
-	std::string response =
-		"HTTP/1.1 200 OK\r\n"
-		"Content-Type: text/html\r\n"
-		"Content-Length: 27\r\n"
-		"Connection: close\r\n"
-		"\r\n"
-		"<html>Hello World!</html>";
-
-	return response;
-}
-
-
-asio::awaitable<void> Connection::writeResponse(std::string_view response) {
+asio::awaitable<void> Connection::writeResponse(Response& response) {
 	auto self{ shared_from_this() };
 
-	co_await asio::async_write(socket_, asio::buffer(response), asio::use_awaitable);
+	std::string statusLine{statusToStatusLine(response.status)};
+	std::string headerLines{headerToString(response.header)};
+
+	std::string parsedResponse{ statusLine + headerLines + "\r\n" + response.body };
+
+	co_await asio::async_write(socket_, asio::buffer(parsedResponse), asio::use_awaitable);
+
 }

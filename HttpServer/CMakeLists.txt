@@ -1,5 +1,5 @@
 ﻿add_executable(HttpServer "src/HttpServer.cpp" "header/HttpServer.h" "src/main.cpp" "src/Connection.cpp" "header/Connection.h" "header/Helper.h" "src/Helper.cpp"
-        header/HttpTypes.h "src/Router.cpp" "header/Router.h"
+        header/HttpTypes.h "src/Router.cpp" "header/Router.h" "header/ResponseFactory.h" "src/ResponseFactory.cpp"
         src/controller/testingController.cpp
         header/controller/testingController.h)
 

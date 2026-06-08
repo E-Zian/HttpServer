@@ -29,15 +29,15 @@ void Router::addRoute(const Method method, const std::string &path,
     currentRoute->handler[method] = handler;
 
 }
-
-Response Router::dispatch(const std::string& path, ParsedRequestObject &request) {
-    std::vector<std::string> pathSegments{Helper::split(path,'/')};
-    Response response;
-    try {
-
-    }catch (std::exception &ex) {
-        response.status = HttpStatus::BAD_REQUEST;
-        response.header["Content-Type"] = "application/json";
-        response.body = "An error has ";
-    }
-}
+//
+//Response Router::dispatch(const std::string& path, ParsedRequestObject &request) {
+//    std::vector<std::string> pathSegments{Helper::split(path,'/')};
+//    Response response;
+//    try {
+//
+//    }catch (std::exception &ex) {
+//        response.status = HttpStatus::BAD_REQUEST;
+//        response.header["Content-Type"] = "application/json";
+//        response.body = "An error has ";
+//    }
+//}
