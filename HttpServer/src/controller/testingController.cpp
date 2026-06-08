@@ -1,9 +1,9 @@
 #include "controller/TestingController.h"
+#include "ResponseFactory.h"
+
 namespace {
 	Response testing(ParsedRequestObject&request) {
-
-
-		return Response();
+		return ResponseFactory::dummy();
 	}
 }
 

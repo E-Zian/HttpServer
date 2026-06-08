@@ -1,5 +1,6 @@
 #include "Connection.h"
 #include "Helper.h"
+#include "ResponseFactory.h"
 #include <iostream>
 #include <asio.hpp>
 #include <fmt/core.h>
@@ -64,7 +65,7 @@ namespace {
 	}
 
 	std::string statusToStatusLine(const HttpStatus status) {
-		std::string httpVersion{ "HTTP/1.1 " };
+		const std::string httpVersion{ "HTTP/1.1 " };
 
 		switch (status)
 		{
@@ -107,14 +108,14 @@ namespace {
 
 }
 
-Connection::Connection( tcp::socket&& connectionSocket, const int connectionId)
-	: 
-	socket_{ std::move(connectionSocket) },
-	connectionId_{ connectionId } {
+Connection::Connection( tcp::socket&& connectionSocket, const int connectionId,const IDispatcher& dispatcher)
+	: socket_{std::move(connectionSocket)},
+	  connectionId_{connectionId},
+	  dispatcher_(dispatcher) {
 }
 
-Connection::pointer Connection::create(tcp::socket&& connectionSocket, const int connectionId) {
-	return pointer(new Connection(std::move(connectionSocket), connectionId));
+Connection::pointer Connection::create(tcp::socket&& connectionSocket, const int connectionId,const IDispatcher& dispatcher) {
+	return pointer(new Connection(std::move(connectionSocket), connectionId,dispatcher));
 }
 
 Connection::~Connection() {
@@ -150,8 +151,8 @@ asio::awaitable<void> Connection::startRead() {
 
 	// Display Header
 
+	// Used to remove warning of std::optional delimiterPosition
 	if (!delimiterPosition) {
-		// Used to remove warning of std::optional delimiterPosition
 		co_return;
 	}
 	Helper::displayMessage("Headers Received from Connection Id ({})\n\n{}\n", connectionId_, std::string_view(requestReceived_.data(), delimiterPosition.value()));
@@ -208,15 +209,15 @@ asio::awaitable<void> Connection::startRead() {
 	Helper::displayMessage("Connection ID ({}) Request Received\n", connectionId_);
 
 	
-	Response response{ ResponseFactory::dummy() };
+	Response response{ dispatcher_.dispatch(std::string(parsedRequest_.route),parsedRequest_) };
 	co_await writeResponse(response);
 }
 
 asio::awaitable<void> Connection::writeResponse(const Response& response) {
 	auto self{ shared_from_this() };
 
-	std::string statusLine{statusToStatusLine(response.status)};
-	std::string headerLines{headerToString(response.header)};
+	const std::string statusLine{statusToStatusLine(response.status)};
+	const std::string headerLines{headerToString(response.header)};
 
 	std::string parsedResponse{ statusLine + "\r\n" + headerLines + "\r\n" + response.body };
 	co_await asio::async_write(socket_, asio::buffer(parsedResponse), asio::use_awaitable);

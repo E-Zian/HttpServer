@@ -5,12 +5,14 @@
 #include "HttpTypes.h"
 #include <memory>
 
-class Router
+#include "Interface/IDispatcher.h"
+
+class Router : public IDispatcher
 {
 public:
 	void addRoute(Method method, const std::string& path, const std::function<Response(ParsedRequestObject&)> &handler) const;
 
-	Response dispatch(const std::string& path,ParsedRequestObject& request);
+	Response dispatch(const std::string& route,ParsedRequestObject& request) const override;
 
 	Router();
 

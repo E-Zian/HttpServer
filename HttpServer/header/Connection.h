@@ -2,18 +2,17 @@
 #ifndef CONNECTION_H
 #define CONNECTION_H
 
+#include "Interface/IDispatcher.h"
 #include "HttpTypes.h"
-#include "ResponseFactory.h"
 #include <asio.hpp>
 #include <memory>
-#include <unordered_map>
 
 class Connection :public std::enable_shared_from_this<Connection> {
 public:
 	using tcp = asio::ip::tcp;
 	using pointer = std::shared_ptr<Connection>;
 
-	static pointer create(tcp::socket&& connectionSocket,int connectionId);
+	static pointer create(tcp::socket&& connectionSocket,int connectionId,const IDispatcher& dispatcher);
 
 	~Connection();
 
@@ -24,9 +23,10 @@ private:
 	int connectionId_;
 	std::vector<char> requestReceived_{};
 	RequestObject request_;
-	ParsedRequestObject parsedRequest_;
+	ParsedRequestObject parsedRequest_{};
+	const IDispatcher& dispatcher_;
 
-	Connection(tcp::socket&& connectionSocket, int connectionId);
+	Connection(tcp::socket&& connectionSocket, int connectionId,const IDispatcher& dispatcher);
 
 	asio::awaitable<void> writeResponse(const Response& response);
 

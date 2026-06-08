@@ -11,7 +11,7 @@ namespace ResponseFactory {
 
 	Response badRequest(std::string_view message);
 
-	Response serverError(std::string_view message);
+	Response serverError();
 
 }
 

@@ -29,8 +29,8 @@ void Router::addRoute(const Method method, const std::string &path,const std::fu
 
 }
 
-Response Router::dispatch(const std::string& path, ParsedRequestObject &request) {
-    std::vector<std::string> pathSegments{Helper::split(path,'/')};
+Response Router::dispatch(const std::string& route, ParsedRequestObject &request) const {
+    const std::vector<std::string> pathSegments{Helper::split(route,'/')};
     Route* currentRoute = root_.get();
 
     for (const auto& pathSegment : pathSegments) {

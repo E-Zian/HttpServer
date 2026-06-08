@@ -2,6 +2,7 @@
 #ifndef HTTPSERVER_H
 #define HTTPSERVER_H
 
+#include "Interface/IDispatcher.h"
 #include "Router.h"
 #include "Connection.h"
 #include <asio.hpp>
@@ -11,7 +12,7 @@ class HttpServer {
 public:
 	using tcp = asio::ip::tcp;
 
-	HttpServer(asio::io_context& io,int port,const Router& router);
+	HttpServer(asio::io_context& io,int port,const IDispatcher& dispatcher);
 
 	~HttpServer();
 
@@ -23,7 +24,7 @@ private:
 	tcp::acceptor acceptor_;
 	std::vector <std::weak_ptr<Connection>> connectionList_;
 	static int totalConnections_;
-	const Router& router_;
+	const IDispatcher& dispatcher_;
 	int port_;
 
 };

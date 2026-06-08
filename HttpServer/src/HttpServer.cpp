@@ -6,10 +6,10 @@
 
 int HttpServer::totalConnections_{};
 
-HttpServer::HttpServer(asio::io_context &io,int port, const Router &router)
+HttpServer::HttpServer(asio::io_context &io, const int port, const IDispatcher& dispatcher)
     : io_{io},
       acceptor_{io, tcp::endpoint(tcp::v4(), port)},
-      router_{router},
+      dispatcher_{dispatcher},
       port_{port}
  {
     asio::co_spawn(io, serverListen(), asio::detached);
@@ -23,7 +23,7 @@ asio::awaitable<void> HttpServer::serverListen() {
 
             asio::ip::tcp::socket socket{co_await acceptor_.async_accept(asio::use_awaitable)};
 
-            Connection::pointer connection{Connection::create( std::move(socket), ++HttpServer::totalConnections_)};
+            Connection::pointer connection{Connection::create( std::move(socket), ++HttpServer::totalConnections_,dispatcher_)};
             connectionList_.push_back(connection);
 
             Helper::displayMessage("Connection ID : {} Connected \n", HttpServer::totalConnections_);
