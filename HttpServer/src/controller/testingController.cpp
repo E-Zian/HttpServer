@@ -1,3 +1,13 @@
-#include "controller/testingController.h"
+#include "controller/TestingController.h"
+namespace {
+	Response testing(ParsedRequestObject&request) {
 
-// the constructor should call the add route
+
+		return Response();
+	}
+}
+
+TestingController::TestingController(const Router& router) : ControllerBase(router) {
+	router_.addRoute(Method::GET, "/", testing);
+}
+

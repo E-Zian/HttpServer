@@ -28,7 +28,7 @@ private:
 
 	Connection(tcp::socket&& connectionSocket, int connectionId);
 
-	asio::awaitable<void> writeResponse(Response& response);
+	asio::awaitable<void> writeResponse(const Response& response);
 
 };
 

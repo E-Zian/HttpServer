@@ -139,9 +139,9 @@ asio::awaitable<void> Connection::startRead() {
 	}
 
 	// Display Header
+
 	if (!delimiterPosition) {
-		// Used to remove warning
-	
+		// Used to remove warning of std::optional delimiterPosition
 		co_return;
 	}
 	Helper::displayMessage("Headers Received from Connection Id ({})\n\n{}\n", connectionId_, std::string_view(requestReceived_.data(), delimiterPosition.value()));
@@ -197,11 +197,12 @@ asio::awaitable<void> Connection::startRead() {
 
 	Helper::displayMessage("Connection ID ({}) Request Received\n", connectionId_);
 
+	
 	Response response{ ResponseFactory::dummy() };
 	co_await writeResponse(response);
 }
 
-asio::awaitable<void> Connection::writeResponse(Response& response) {
+asio::awaitable<void> Connection::writeResponse(const Response& response) {
 	auto self{ shared_from_this() };
 
 	std::string statusLine{statusToStatusLine(response.status)};
@@ -211,3 +212,4 @@ asio::awaitable<void> Connection::writeResponse(Response& response) {
 	co_await asio::async_write(socket_, asio::buffer(parsedResponse), asio::use_awaitable);
 
 }
+

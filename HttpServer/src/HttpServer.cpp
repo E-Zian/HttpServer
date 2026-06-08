@@ -6,7 +6,7 @@
 
 int HttpServer::totalConnections_{};
 
-HttpServer::HttpServer(asio::io_context &io,int port, Router &router)
+HttpServer::HttpServer(asio::io_context &io,int port, const Router &router)
     : io_{io},
       acceptor_{io, tcp::endpoint(tcp::v4(), port)},
       router_{router} {

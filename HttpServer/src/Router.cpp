@@ -5,8 +5,8 @@
 Router::Router() : root_(std::make_unique<Route>()) {
 };
 
-void Router::addRoute(const Method method, const std::string &path,
-                      const std::function<void(ParsedRequestObject &, Response &)> &handler) const {
+void Router::addRoute(const Method method, const std::string &path,const std::function<Response(ParsedRequestObject &)> &handler) const {
+
     const std::vector<std::string> pathSegments{Helper::split(path, '/')};
 
     Route *currentRoute = root_.get();

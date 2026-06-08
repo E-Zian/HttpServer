@@ -1,7 +1,7 @@
 ﻿add_executable(HttpServer "src/HttpServer.cpp" "header/HttpServer.h" "src/main.cpp" "src/Connection.cpp" "header/Connection.h" "header/Helper.h" "src/Helper.cpp"
         header/HttpTypes.h "src/Router.cpp" "header/Router.h" "header/ResponseFactory.h" "src/ResponseFactory.cpp"
-        src/controller/testingController.cpp
-        header/controller/testingController.h)
+        src/controller/TestingController.cpp
+        "header/controller/TestingController.h" "src/controller/ControllerBase.cpp" "header/controller/ControllerBase.h")
 
 # Define Windows version for ASIO
 target_compile_definitions(HttpServer PRIVATE _WIN32_WINNT=0x0A00)

@@ -2,4 +2,13 @@
 #ifndef HTTPSERVER_TESTINGCONTROLLER_H
 #define HTTPSERVER_TESTINGCONTROLLER_H
 
+#include "Router.h"
+#include "ControllerBase.h"
+
+class TestingController :public ControllerBase{
+	public:
+		TestingController(const Router& router);
+	private:
+};
+
 #endif //HTTPSERVER_TESTINGCONTROLLER_H

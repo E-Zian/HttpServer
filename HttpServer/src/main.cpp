@@ -5,7 +5,7 @@
 #include <windows.h>
 
 int main() {
-
+    // To display color in terminal
     HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
     DWORD dwMode = 0;
     GetConsoleMode(hOut, &dwMode);

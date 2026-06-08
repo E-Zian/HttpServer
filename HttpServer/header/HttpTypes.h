@@ -45,7 +45,7 @@ enum class Method {
 
 struct Route {
     std::string segmentName;
-    std::unordered_map<Method, std::function<void(ParsedRequestObject&, Response&)>> handler{};
+    std::unordered_map<Method, std::function<Response(ParsedRequestObject&)>> handler{};
     std::unordered_map<std::string, std::unique_ptr<Route>> children{};
     std::unique_ptr<Route> parameterChild{};
 };
