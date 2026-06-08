@@ -1,10 +1,21 @@
 #pragma once
 #ifndef HTTPSERVER_HTTPTYPES_H
 #define HTTPSERVER_HTTPTYPES_H
+
 #include <string>
 #include <unordered_map>
 #include <functional>
 #include <memory>
+
+enum class Method {
+    GET,
+    POST,
+    PUT,
+    DEL,
+    PATCH,
+    HEAD,
+    OPTIONS
+};
 
 struct RequestObject {
     std::string_view header;
@@ -12,11 +23,12 @@ struct RequestObject {
 };
 
 struct ParsedRequestObject {
-	std::string_view method;
+	Method method;
 	std::string_view route;
 	std::string_view httpVersion;
 	std::unordered_map<std::string, std::string> header{};
     std::string_view body;
+    std::unordered_map<std::string, std::string> parameterValues{};
 
 };
 
@@ -33,15 +45,6 @@ struct Response {
     std::string body;
 };
 
-enum class Method {
-    GET,
-    POST,
-    PUT,
-    DELETE,
-    PATCH,
-    HEAD,
-    OPTIONS
-};
 
 struct Route {
     std::string segmentName;

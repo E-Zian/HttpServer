@@ -2,8 +2,7 @@
 #include "Helper.h"
 #include <vector>
 
-Router::Router() : root_(std::make_unique<Route>()) {
-};
+Router::Router() : root_(std::make_unique<Route>()) {};
 
 void Router::addRoute(const Method method, const std::string &path,const std::function<Response(ParsedRequestObject &)> &handler) const {
 
@@ -29,15 +28,24 @@ void Router::addRoute(const Method method, const std::string &path,const std::fu
     currentRoute->handler[method] = handler;
 
 }
-//
-//Response Router::dispatch(const std::string& path, ParsedRequestObject &request) {
-//    std::vector<std::string> pathSegments{Helper::split(path,'/')};
-//    Response response;
-//    try {
-//
-//    }catch (std::exception &ex) {
-//        response.status = HttpStatus::BAD_REQUEST;
-//        response.header["Content-Type"] = "application/json";
-//        response.body = "An error has ";
-//    }
-//}
+
+Response Router::dispatch(const std::string& path, ParsedRequestObject &request) {
+    std::vector<std::string> pathSegments{Helper::split(path,'/')};
+    Route* currentRoute = root_.get();
+
+    for (const auto& pathSegment : pathSegments) {
+        if (currentRoute->children.contains(pathSegment)) {
+            currentRoute = currentRoute->children[pathSegment].get();
+        }
+        else if (currentRoute->parameterChild) {
+            currentRoute = currentRoute->parameterChild.get();
+            request.parameterValues[currentRoute->segmentName] = pathSegment;
+        }
+        else {
+            // send bad request
+        }
+    }
+
+    return currentRoute->handler[request.method](request);
+    
+}

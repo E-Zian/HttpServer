@@ -95,6 +95,16 @@ namespace {
 		return headerLines;
 	}
 
+	const std::unordered_map<std::string_view, Method> methodMap = {
+		{"GET",     Method::GET},
+		{"POST",    Method::POST},
+		{"PUT",     Method::PUT},
+		{"DELETE",  Method::DEL},
+		{"PATCH",   Method::PATCH},
+		{"HEAD",    Method::HEAD},
+		{"OPTIONS", Method::OPTIONS},
+	};
+
 }
 
 Connection::Connection( tcp::socket&& connectionSocket, const int connectionId)
@@ -161,7 +171,7 @@ asio::awaitable<void> Connection::startRead() {
 		co_return;
 	};
 
-	parsedRequest_.method = parseRequestLineComponents.value()[0];
+	parsedRequest_.method = methodMap.find(parseRequestLineComponents.value()[0])->second;
 	parsedRequest_.route = parseRequestLineComponents.value()[1];
 	parsedRequest_.httpVersion = parseRequestLineComponents.value()[2];
 
