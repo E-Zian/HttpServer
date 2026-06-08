@@ -24,6 +24,7 @@ private:
 	std::vector <std::weak_ptr<Connection>> connectionList_;
 	static int totalConnections_;
 	const Router& router_;
+	int port_;
 
 };
 

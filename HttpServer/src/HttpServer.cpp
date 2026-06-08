@@ -9,7 +9,9 @@ int HttpServer::totalConnections_{};
 HttpServer::HttpServer(asio::io_context &io,int port, const Router &router)
     : io_{io},
       acceptor_{io, tcp::endpoint(tcp::v4(), port)},
-      router_{router} {
+      router_{router},
+      port_{port}
+ {
     asio::co_spawn(io, serverListen(), asio::detached);
 
 }
@@ -35,6 +37,6 @@ asio::awaitable<void> HttpServer::serverListen() {
 
 
 HttpServer::~HttpServer() {
-    Helper::displayMessage("Server Closed");
+    Helper::displayMessage("Server on port ({}) closed\n",port_);
     connectionList_.clear();
 }
