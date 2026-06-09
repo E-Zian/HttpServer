@@ -206,9 +206,6 @@ asio::awaitable<void> Connection::startRead() {
 		parsedRequest_.body = request_.body;
 	}
 
-	Helper::displayMessage("Connection ID ({}) Request Received\n", connectionId_);
-
-	
 	Response response{ dispatcher_.dispatch(std::string(parsedRequest_.route),parsedRequest_) };
 	co_await writeResponse(response);
 }
