@@ -9,10 +9,11 @@ namespace ResponseFactory {
 
 	Response dummy();
 
-	Response badRequest(std::string_view message);
+	Response badRequest(const std::string_view message);
 
 	Response serverError();
 
+	Response customText(const std::string msg);
 }
 
 #endif //RESPONSEFACTORY_H
