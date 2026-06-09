@@ -1,5 +1,6 @@
 #include "Router.h"
 #include "Helper.h"
+#include "ResponseFactory.h"
 #include <vector>
 
 Router::Router() : root_(std::make_unique<Route>()) {};
@@ -42,7 +43,7 @@ Response Router::dispatch(const std::string& route, ParsedRequestObject &request
             request.parameterValues[currentRoute->segmentName] = pathSegment;
         }
         else {
-            // send bad request
+            return ResponseFactory::badRequest("Could not find route {} ", route);
         }
     }
 

@@ -19,24 +19,24 @@ HttpServer::HttpServer(asio::io_context &io, const int port, const IDispatcher& 
 asio::awaitable<void> HttpServer::serverListen() {
     while (true) {
         try {
-            Helper::displayMessage("Waiting for connection \n");
+            Helper::displayMessage("Waiting for connection...");
 
             asio::ip::tcp::socket socket{co_await acceptor_.async_accept(asio::use_awaitable)};
 
             Connection::pointer connection{Connection::create( std::move(socket), ++HttpServer::totalConnections_,dispatcher_)};
             connectionList_.push_back(connection);
 
-            Helper::displayMessage("Connection ID : {} Connected \n", HttpServer::totalConnections_);
+            Helper::displayMessage("Connection ID : {} Connected", HttpServer::totalConnections_);
 
             asio::co_spawn(io_, connection->startRead(), asio::detached);
         } catch (std::exception &ex) {
-            Helper::displayError("{}\n", ex.what());
+            Helper::displayError("Http Server error , {}", ex.what());
         }
     }
 }
 
 
 HttpServer::~HttpServer() {
-    Helper::displayMessage("Server on port ({}) closed\n",port_);
+    Helper::displayMessage("Server on port ({}) closed",port_);
     connectionList_.clear();
 }

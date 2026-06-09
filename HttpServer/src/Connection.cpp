@@ -119,7 +119,7 @@ Connection::pointer Connection::create(tcp::socket&& connectionSocket, const int
 }
 
 Connection::~Connection() {
-	Helper::displayMessage("Connection ID ({}) Disconnected\n", connectionId_);
+	Helper::displayMessage("Connection ID ({}) Disconnected", connectionId_);
 }
 
 asio::awaitable<void> Connection::startRead() {
@@ -145,7 +145,9 @@ asio::awaitable<void> Connection::startRead() {
 		delimiterPosition = parseRequestForHeader(std::string_view(requestReceived_.data(), requestReceived_.size()));
 	}
 	if (ec) {
-		// send bad request
+
+		co_await writeResponse(ResponseFactory::serverError("Internal Server Error: An unexpected error occured"));
+		Helper::displayError("Error Connection ID ({}) Request Failed: {}", connectionId_, ec.message());
 		co_return;
 	}
 
@@ -155,7 +157,7 @@ asio::awaitable<void> Connection::startRead() {
 	if (!delimiterPosition) {
 		co_return;
 	}
-	Helper::displayMessage("Headers Received from Connection Id ({})\n\n{}\n", connectionId_, std::string_view(requestReceived_.data(), delimiterPosition.value()));
+	Helper::displayMessage("Headers Received from Connection Id ({})\n{}", connectionId_, std::string_view(requestReceived_.data(), delimiterPosition.value()));
 	
 	request_.header = std::string_view(requestReceived_.data(), delimiterPosition.value());
 
@@ -168,7 +170,8 @@ asio::awaitable<void> Connection::startRead() {
 	if (!parseRequestLineComponents.has_value()) {
 		Helper::displayError("Error Connection ID ({}) Request Failed: {}", connectionId_, "Malformed Request Line Received");
 
-		// Send internal server error 
+		co_await writeResponse(ResponseFactory::badRequest("Request Failed: Malformed request line received on {}", requestLine));
+
 		co_return;
 	};
 
@@ -183,7 +186,9 @@ asio::awaitable<void> Connection::startRead() {
 		std::optional<std::pair<std::string, std::string>> headerPair{ parseHeaderLine(headerLine) };
 		if (!headerPair.has_value()) {
 			Helper::displayError("Error Connection ID ({}) Request Failed: {}{}", connectionId_, "Malformed header line : ", headerLine);
-			// send bad request
+
+			co_await writeResponse(ResponseFactory::badRequest("Request Failed: Malformed header line received on {}", headerLine));
+
 			break;
 		}
 		parsedRequest_.header[headerPair.value().first] = headerPair.value().second;
