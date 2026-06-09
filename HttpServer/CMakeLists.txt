@@ -3,7 +3,7 @@
         src/controller/TestingController.cpp
         "header/controller/TestingController.h" "src/controller/ControllerBase.cpp" "header/controller/ControllerBase.h"
         header/Interface/Idispatcher.h
-        src/Interface/IDispatcher.cpp
+
 )
 
 # Define Windows version for ASIO
