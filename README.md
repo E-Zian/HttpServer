@@ -6,6 +6,8 @@ A lightweight HTTP server written in C++ using ASIO for networking.
 
 - [CMake](https://cmake.org/) 
 - [vcpkg](https://github.com/microsoft/vcpkg)
+
+#### Installed through vcpkg
 - [ASIO](https://think-async.com/Asio/) — networking
 - [nlohmann-json](https://github.com/nlohmann/json) — JSON serialization
 - [fmt](https://github.com/fmtlib/fmt) — string formatting
