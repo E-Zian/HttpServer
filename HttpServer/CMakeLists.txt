@@ -20,5 +20,8 @@ target_link_libraries(HttpServer PRIVATE fmt::fmt)
 find_package(asio REQUIRED)
 target_link_libraries(HttpServer PRIVATE asio::asio)
 
+find_package(nlohmann_json CONFIG REQUIRED)
+target_link_libraries(HttpServer PRIVATE nlohmann_json::nlohmann_json)
+
 target_include_directories(HttpServer PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_include_directories(HttpServer PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/header)

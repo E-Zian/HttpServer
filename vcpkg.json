@@ -1,6 +1,7 @@
 {
   "dependencies": [
     "asio",
-    "fmt"
+    "fmt",
+    "nlohmann-json"
   ]
 }

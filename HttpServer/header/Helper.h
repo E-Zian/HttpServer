@@ -2,10 +2,10 @@
 #ifndef Helper_H
 #define Helper_H
 
+#include <fmt/color.h>
 #include <string>
 #include <algorithm>
 #include <vector>
-#include <fmt/color.h>
 #include <optional>
 
 namespace Helper {

@@ -4,6 +4,7 @@
 
 #include "HttpTypes.h"
 #include <fmt/core.h>
+#include <nlohmann/json.hpp>
 #include <string>
 
 namespace ResponseFactory {
@@ -33,6 +34,9 @@ namespace ResponseFactory {
 
 		return response;
 	}
+
+	Response dummyJson();
+
 
 }
 

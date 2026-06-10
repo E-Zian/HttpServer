@@ -16,3 +16,17 @@ Response ResponseFactory::customText(const std::string msg) {
 
 	return response;
 }
+
+Response ResponseFactory::dummyJson() {
+	using json = nlohmann::json;
+	json bodyJson{};
+	bodyJson["text"] = "Dummy text";
+	bodyJson["number"] = 123;
+
+	std::string msg{ bodyJson.dump() };
+	Response response(HttpStatus::OK, {}, msg);
+	response.header["Content-Type"] = "application/json";
+	response.header["Content-Length"] = std::to_string(msg.length());
+
+	return response;
+}

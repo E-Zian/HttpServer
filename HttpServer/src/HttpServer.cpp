@@ -17,6 +17,8 @@ HttpServer::HttpServer(asio::io_context &io, const int port, const IDispatcher& 
 }
 
 asio::awaitable<void> HttpServer::serverListen() {
+    Helper::displayMessage("Initiated server listen on port ({})",port_);
+
     while (true) {
         try {
             Helper::displayMessage("Waiting for connection...");
