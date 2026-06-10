@@ -3,7 +3,7 @@
 #define CONNECTION_H
 
 #include "Interface/IDispatcher.h"
-#include "HttpTypes.h"
+#include "model/HttpTypes.h"
 #include <asio.hpp>
 #include <memory>
 

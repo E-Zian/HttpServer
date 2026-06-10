@@ -2,7 +2,7 @@
 #ifndef RESPONSEFACTORY_H
 #define RESPONSEFACTORY_H
 
-#include "HttpTypes.h"
+#include "model/HttpTypes.h"
 #include <fmt/core.h>
 #include <nlohmann/json.hpp>
 #include <string>

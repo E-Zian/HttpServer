@@ -2,7 +2,7 @@
 #ifndef HTTPSERVER_IDISPATCHER_H
 #define HTTPSERVER_IDISPATCHER_H
 
-#include "HttpTypes.h"
+#include "model/HttpTypes.h"
 #include <string>
 
 class IDispatcher {

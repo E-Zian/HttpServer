@@ -2,7 +2,7 @@
 #ifndef ROUTER_H
 #define ROUTER_H
 
-#include "HttpTypes.h"
+#include "model/HttpTypes.h"
 #include <memory>
 
 #include "Interface/IDispatcher.h"

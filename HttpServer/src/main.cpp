@@ -1,9 +1,11 @@
 #include "HttpServer.h"
 #include "controller/testingController.h"
 #include "Router.h"
+#include "database/database.h"
 #include <asio.hpp>
 #include <fmt/color.h>
 #include <windows.h>
+
 int main() {
     // To display color in terminal
     const HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -13,7 +15,7 @@ int main() {
     SetConsoleMode(hOut, dwMode);
 
     // ------------------------------------
-
+    DataBase db{ "server.db" };
     asio::io_context io;
 
     const Router router{};
