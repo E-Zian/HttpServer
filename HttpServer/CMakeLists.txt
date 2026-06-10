@@ -16,12 +16,12 @@
 "src/controller/ControllerBase.cpp" 
 "header/controller/ControllerBase.h"
 "header/Interface/Idispatcher.h"  
-"header/database/database.h" 
+"header/database/Database.h" 
 "src/database/database.cpp"
  "src/repository/UserRepo.cpp" 
  "src/repository/PokemonRepo.cpp" 
  "header/repository/UserRepo.h" 
- "header/repository/PokemonRepo.h")
+ "header/repository/PokemonRepo.h" "header/model/UserModel.h" "header/model/PokemonModel.h" "header/controller/UserController.h" "header/controller/PokemonController.h" "src/controller/UserController.cpp" "src/controller/PokemonController.cpp")
 
 # Define Windows version for ASIO
 target_compile_definitions(HttpServer PRIVATE _WIN32_WINNT=0x0A00)
