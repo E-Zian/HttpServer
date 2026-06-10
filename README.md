@@ -11,6 +11,7 @@ A lightweight HTTP server written in C++ using ASIO for networking.
 - [ASIO](https://think-async.com/Asio/) — networking
 - [nlohmann-json](https://github.com/nlohmann/json) — JSON serialization
 - [fmt](https://github.com/fmtlib/fmt) — string formatting
+- [sqlitecpp](https://github.com/srombauts/sqlitecpp) - database
 
 ## Prerequisites
 
