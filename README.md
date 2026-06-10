@@ -32,6 +32,7 @@ VCPKG_ROOT = C:\path\to\vcpkg
 ### 1. Clone the repository
 ```bash
 git clone https://github.com/E-Zian/HttpServer.git
+cd HttpServer
 ```
 
 ### 2. Install dependencies via vcpkg
