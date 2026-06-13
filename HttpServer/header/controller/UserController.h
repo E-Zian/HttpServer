@@ -4,11 +4,13 @@
 
 #include "Router.h"
 #include "ControllerBase.h"
+#include "repository/UserRepo.h"
 
 class UserController :public ControllerBase {
 public:
-	explicit UserController(const Router& router);
+	UserController(const Router& router,const UserRepo& repo);
 private:
+	const UserRepo& repo_;
 };
 
 #endif 

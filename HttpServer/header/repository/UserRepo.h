@@ -11,21 +11,22 @@ class UserRepo
 	using User = UserModel::User;
 
 public:
-	explicit UserRepo(const DataBase& db) :db_{ db } {};
+	explicit UserRepo(SQLite::Database& db) :db_{ db } {};
 
-	std::optional<User> createUser(User newUser);
+	std::optional<User> createUser(const User &newUser) const;
 
-	std::vector<User> getAllUser();
+	std::optional<std::vector<User>> getAllUser() const;
 
-	std::optional<User> getUserById(int id);
+	std::optional<User> getUserById(int id) const;
 
-	std::optional<User> updateUserById(int id,User newUser);
+	std::optional<User> updateUserById(int id, const User &newUser) const;
 
-	bool deleteUserById(int id);
+	bool deleteUserById(int id) const;
 
 private:
-	const DataBase& db_;
-	
+	SQLite::Database& db_;
+
+
 };
 
 

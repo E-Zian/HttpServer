@@ -17,10 +17,9 @@ public:
 
 	std::optional<Pokemon> updatePokemonById(int id, Pokemon newPokemon) const;
 
-	std::optional<bool> deletePokemonById(int id) const;
+	bool deletePokemonById(int id) const;
 
 	std::optional<std::vector<Pokemon>> getAllPokemon() const;
-
 
 private:
 	SQLite::Database& db_;

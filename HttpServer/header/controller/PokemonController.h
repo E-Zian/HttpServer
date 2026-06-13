@@ -4,11 +4,13 @@
 
 #include "Router.h"
 #include "ControllerBase.h"
+#include "repository/PokemonRepo.h"
 
 class PokemonController :public ControllerBase {
 public:
-	explicit PokemonController(const Router& router);
+	PokemonController(const Router& router,const PokemonRepo& repo);
 private:
+	const PokemonRepo& repo_;
 };
 
 #endif 

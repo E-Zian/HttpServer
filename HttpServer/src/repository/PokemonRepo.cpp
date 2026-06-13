@@ -69,7 +69,7 @@ std::optional<PokemonRepo::Pokemon> PokemonRepo::updatePokemonById(const int id,
     }
 }
 
-std::optional<bool> PokemonRepo::deletePokemonById(const int id) const {
+bool PokemonRepo::deletePokemonById(const int id) const {
     try {
         SQLite::Transaction transaction{db_};
 
@@ -91,7 +91,7 @@ std::optional<bool> PokemonRepo::deletePokemonById(const int id) const {
     } catch (const SQLite::Exception &e) {
         Helper::displayError("{}",e.what());
 
-        return std::nullopt;
+        return false;
     }
 }
 

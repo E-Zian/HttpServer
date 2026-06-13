@@ -1,6 +1,8 @@
 #include "HttpServer.h"
 #include "controller/testingController.h"
 #include "Router.h"
+#include "repository/PokemonRepo.h"
+#include "repository/UserRepo.h"
 #include "database/database.h"
 #include <asio.hpp>
 #include <fmt/color.h>
@@ -19,7 +21,13 @@ int main() {
     asio::io_context io;
 
     const Router router{};
+    // Repo Setup
+    PokemonRepo pokemonRepo{db.get()};
+    UserRepo userRepo{db.get()};
+
     TestingController testingController{router};
+
+
 
     HttpServer server(io,6767,router);
 
