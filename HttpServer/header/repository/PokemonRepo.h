@@ -9,8 +9,7 @@
 class PokemonRepo{
 	using Pokemon = PokemonModel::Pokemon;
 public:
-
-	PokemonRepo(const DataBase& db) :db_{ db } {};
+	explicit PokemonRepo(SQLite::Database& db) :db_{ db } {};
 
 	std::optional<Pokemon> createPokemonById(Pokemon newPokemon);
 
@@ -24,7 +23,7 @@ public:
 
 
 private:
-	const DataBase& db_;
+	SQLite::Database& db_;
 };
 
 

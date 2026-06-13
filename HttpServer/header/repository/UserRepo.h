@@ -11,7 +11,7 @@ class UserRepo
 	using User = UserModel::User;
 
 public:
-	UserRepo(const DataBase& db) :db_{ db } {};
+	explicit UserRepo(const DataBase& db) :db_{ db } {};
 
 	std::optional<User> createUser(User newUser);
 

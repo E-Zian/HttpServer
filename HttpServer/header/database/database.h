@@ -7,7 +7,7 @@
 
 class DataBase {
 public:
-    DataBase(const std::string path);
+    explicit DataBase(std::string path);
        
     SQLite::Database& get() { return db_; }
 
