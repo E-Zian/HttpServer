@@ -20,6 +20,7 @@ namespace ResponseFactory {
 
 		Response response{ HttpStatus::SERVER_ERROR,{},json.dump() };
 		response.header["Content-Type"] = "application/json";
+		response.header["Connection"] = "close";
 		response.header["Content-Length"] = std::to_string(response.body.size());
 
 		return response;
@@ -37,6 +38,7 @@ namespace ResponseFactory {
 		Response response{ HttpStatus::BAD_REQUEST,{},json.dump() };
 
 		response.header["Content-Type"] = "application/json";
+		response.header["Connection"] = "close";
 		response.header["Content-Length"] = std::to_string(response.body.size());
 
 
@@ -55,6 +57,7 @@ namespace ResponseFactory {
 		Response response{ HttpStatus::NOT_FOUND,{},json.dump() };
 
 		response.header["Content-Type"] = "application/json";
+		response.header["Connection"] = "close";
 		response.header["Content-Length"] = std::to_string(response.body.size());
 
 		return response;
