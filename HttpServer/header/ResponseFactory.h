@@ -25,7 +25,7 @@ namespace ResponseFactory {
 		return response;
 	}
 
-	Response customText(const std::string msg);
+	Response customText(const std::string &msg);
 
 	template<typename...Args>
 	Response badRequest(fmt::format_string<Args...> fmt_string,Args&&... args) {
@@ -34,10 +34,11 @@ namespace ResponseFactory {
 		nlohmann::json json;
 		json["errorMessage"] = message;
 
-		Response response{ HttpStatus::SERVER_ERROR,{},json.dump() };
+		Response response{ HttpStatus::BAD_REQUEST,{},json.dump() };
 
-		response.header["Content-Type"] = "text/plain";
-		response.header["Content-Length"] = std::to_string(message.length());
+		response.header["Content-Type"] = "application/json";
+		response.header["Content-Length"] = std::to_string(response.body.size());
+
 
 		return response;
 	}
@@ -53,8 +54,8 @@ namespace ResponseFactory {
 
 		Response response{ HttpStatus::NOT_FOUND,{},json.dump() };
 
-		response.header["Content-Type"] = "text/plain";
-		response.header["Content-Length"] = std::to_string(message.length());
+		response.header["Content-Type"] = "application/json";
+		response.header["Content-Length"] = std::to_string(response.body.size());
 
 		return response;
 	}

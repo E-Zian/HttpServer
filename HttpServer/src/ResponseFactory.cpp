@@ -9,7 +9,7 @@ Response ResponseFactory::dummy() {
 	return response;
 }
 
-Response ResponseFactory::customText(const std::string msg) {
+Response ResponseFactory::customText(const std::string &msg) {
 	Response response(HttpStatus::OK, {}, msg);
 	response.header["Content-Type"] = "text/plain";
 	response.header["Content-Length"] = std::to_string(msg.length());

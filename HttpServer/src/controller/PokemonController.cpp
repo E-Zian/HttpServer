@@ -14,7 +14,7 @@ PokemonController::PokemonController(const Router &router, const PokemonRepo &re
         return this->createPokemon(req);
     });
 
-    router_.addRoute(Method::GET, "/api/pokemon/:id", [this](const ParsedRequestObject &req) {
+    router_.addRoute(Method::GET, "/api/pokemon/get/:id", [this](const ParsedRequestObject &req) {
         return this->getPokemon(req);
     });
 
@@ -114,7 +114,15 @@ Response PokemonController::getPokemon(const ParsedRequestObject &request) const
         response.header["Content-Length"] = std::to_string(response.body.size());
 
         return response;
-    } catch (const std::exception &e) {
+    } catch (const std::invalid_argument& e) {
+        Helper::displayError("{}", e.what());
+
+        return ResponseFactory::badRequest("Invalid pokemon id");
+    } catch (const std::out_of_range& e) {
+        Helper::displayError("{}", e.what());
+
+        return ResponseFactory::badRequest("Invalid pokemon id");
+    }catch (const std::exception &e) {
         Helper::displayError("{}", e.what());
         return ResponseFactory::serverError("An unexpected error had occurred in the server");
     }

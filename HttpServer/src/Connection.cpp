@@ -222,6 +222,7 @@ asio::awaitable<void> Connection::writeResponse(const Response& response) {
 	const std::string headerLines{headerToString(response.header)};
 
 	std::string parsedResponse{ statusLine + "\r\n" + headerLines + "\r\n" + response.body };
+	Helper::displayMessage("{}",parsedResponse);
 	co_await asio::async_write(socket_, asio::buffer(parsedResponse), asio::use_awaitable);
 
 }

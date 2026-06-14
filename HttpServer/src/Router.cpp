@@ -31,22 +31,22 @@ void Router::addRoute(const Method method, const std::string &path,const std::fu
 }
 
 Response Router::dispatch(const std::string& route, ParsedRequestObject &request) const {
-    const std::vector<std::string> pathSegments{Helper::split(route,'/')};
-    Route* currentRoute = root_.get();
 
-    for (const auto& pathSegment : pathSegments) {
-        if (currentRoute->children.contains(pathSegment)) {
-            currentRoute = currentRoute->children[pathSegment].get();
-        }
-        else if (currentRoute->parameterChild) {
-            currentRoute = currentRoute->parameterChild.get();
-            request.parameterValues[currentRoute->segmentName] = pathSegment;
-        }
-        else {
-            return ResponseFactory::badRequest("Could not find route {} ", route);
-        }
-    }
+        const std::vector<std::string> pathSegments{Helper::split(route,'/')};
+        Route* currentRoute = root_.get();
 
-    return currentRoute->handler[request.method](request);
-    
+        for (const auto& pathSegment : pathSegments) {
+            if (currentRoute->children.contains(pathSegment)) {
+                currentRoute = currentRoute->children[pathSegment].get();
+            }
+            else if (currentRoute->parameterChild) {
+                currentRoute = currentRoute->parameterChild.get();
+                request.parameterValues[currentRoute->segmentName] = pathSegment;
+            }
+            else {
+                return ResponseFactory::badRequest("Could not find route {} ", route);
+            }
+        }
+        return currentRoute->handler[request.method](request);
+
 }
