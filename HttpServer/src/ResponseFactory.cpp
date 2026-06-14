@@ -23,7 +23,7 @@ Response ResponseFactory::dummyJson() {
 	bodyJson["text"] = "Dummy text";
 	bodyJson["number"] = 123;
 
-	std::string msg{ bodyJson.dump() };
+	const std::string msg{ bodyJson.dump() };
 	Response response(HttpStatus::OK, {}, msg);
 	response.header["Content-Type"] = "application/json";
 	response.header["Content-Length"] = std::to_string(msg.length());

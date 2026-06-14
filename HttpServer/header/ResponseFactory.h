@@ -13,11 +13,14 @@ namespace ResponseFactory {
 
 	template<typename...Args>
 	Response serverError(fmt::format_string<Args...> fmt_string, Args&&... args) {
-		std::string message{ fmt::format(fmt_string,std::forward<Args>(args)...) };
+		const std::string message{ fmt::format(fmt_string,std::forward<Args>(args)...) };
 
-		Response response{ HttpStatus::SERVER_ERROR,{},message };
-		response.header["Content-Type"] = "text/plain";
-		response.header["Content-Length"] = std::to_string(message.length());
+		nlohmann::json json;
+		json["errorMessage"] = message;
+
+		Response response{ HttpStatus::SERVER_ERROR,{},json.dump() };
+		response.header["Content-Type"] = "application/json";
+		response.header["Content-Length"] = std::to_string(response.body.size());
 
 		return response;
 	}
@@ -26,9 +29,13 @@ namespace ResponseFactory {
 
 	template<typename...Args>
 	Response badRequest(fmt::format_string<Args...> fmt_string,Args&&... args) {
-		std::string message{ fmt::format(fmt_string,std::forward<Args>(args)...) };
+		const std::string message{ fmt::format(fmt_string,std::forward<Args>(args)...) };
 
-		Response response{ HttpStatus::BAD_REQUEST,{},std::string{message} };
+		nlohmann::json json;
+		json["errorMessage"] = message;
+
+		Response response{ HttpStatus::SERVER_ERROR,{},json.dump() };
+
 		response.header["Content-Type"] = "text/plain";
 		response.header["Content-Length"] = std::to_string(message.length());
 
@@ -37,6 +44,20 @@ namespace ResponseFactory {
 
 	Response dummyJson();
 
+	template<typename...Args>
+	Response notFound(fmt::format_string<Args...> fmt_string,Args&&... args) {
+		const std::string message{ fmt::format(fmt_string,std::forward<Args>(args)...) };
+
+		nlohmann::json json;
+		json["errorMessage"] = message;
+
+		Response response{ HttpStatus::NOT_FOUND,{},json.dump() };
+
+		response.header["Content-Type"] = "text/plain";
+		response.header["Content-Length"] = std::to_string(message.length());
+
+		return response;
+	}
 
 }
 

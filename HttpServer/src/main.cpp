@@ -2,6 +2,7 @@
 #include "controller/testingController.h"
 #include "Router.h"
 #include "repository/PokemonRepo.h"
+#include "controller/PokemonController.h"
 #include "repository/UserRepo.h"
 #include "database/database.h"
 #include <asio.hpp>
@@ -22,11 +23,11 @@ int main() {
 
     const Router router{};
     // Repo Setup
-    PokemonRepo pokemonRepo{db.get()};
+    const PokemonRepo pokemonRepo{db.get()};
     UserRepo userRepo{db.get()};
 
     TestingController testingController{router};
-
+    PokemonController pokemonController{router, pokemonRepo};
 
 
     HttpServer server(io,6767,router);

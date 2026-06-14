@@ -11,11 +11,11 @@ class PokemonRepo{
 public:
 	explicit PokemonRepo(SQLite::Database& db) :db_{ db } {};
 
-	std::optional<Pokemon> createPokemonById(const Pokemon &newPokemon) const;
+	std::optional<Pokemon> createPokemon(const PokemonModel::DTO::CreatePokemonRequest &newPokemon) const;
 
 	std::optional<Pokemon> getPokemonById(int id) const;
 
-	std::optional<Pokemon> updatePokemonById(int id, Pokemon newPokemon) const;
+	std::optional<Pokemon> updatePokemon(const Pokemon& updatePokemonRequest) const;
 
 	bool deletePokemonById(int id) const;
 
