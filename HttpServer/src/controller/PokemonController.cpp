@@ -6,11 +6,11 @@
 
 PokemonController::PokemonController(const Router &router, const PokemonRepo &repo) : ControllerBase(router),
     repo_(repo) {
-    router_.addRoute(Method::GET, "/api/pokemon/getAll", [this](ParsedRequestObject &req) {
+    router_.addRoute(Method::GET, "/api/pokemon/getAll", [this](const ParsedRequestObject &req) {
         return this->getAllPokemon(req);
     });
 
-    router_.addRoute(Method::POST, "/api/pokemon/create", [this](ParsedRequestObject &req) {
+    router_.addRoute(Method::POST, "/api/pokemon/create", [this](const ParsedRequestObject &req) {
         return this->createPokemon(req);
     });
 
@@ -27,7 +27,7 @@ PokemonController::PokemonController(const Router &router, const PokemonRepo &re
 });
 }
 
-Response PokemonController::getAllPokemon(ParsedRequestObject &request) const {
+Response PokemonController::getAllPokemon(const ParsedRequestObject &request) const {
     try {
         Response response{HttpStatus::OK, {}, {}};
 
@@ -52,7 +52,7 @@ Response PokemonController::getAllPokemon(ParsedRequestObject &request) const {
     }
 }
 
-Response PokemonController::createPokemon(ParsedRequestObject &request) const {
+Response PokemonController::createPokemon(const ParsedRequestObject &request) const {
     try {
         Response response{HttpStatus::OK, {}, {}};
 
@@ -87,7 +87,7 @@ Response PokemonController::createPokemon(ParsedRequestObject &request) const {
         Helper::displayError("{}", e.what());
         return ResponseFactory::badRequest("Invalid pokemon data");
 
-    }catch (const PokemonAlreadyExistsException& e) {
+    }catch (const PokemonModel::Error::PokemonAlreadyExistsException& e) {
         Helper::displayError("{}", e.what());
         return ResponseFactory::badRequest("{}", e.what());
 
@@ -178,7 +178,11 @@ Response PokemonController::updatePokemon(const ParsedRequestObject &request) co
         Helper::displayError("{}", e.what());
         return ResponseFactory::badRequest("Invalid request data");
 
-    } catch (const std::exception &e) {
+    }catch (PokemonModel::Error::PokemonNotFoundException& e) {
+        Helper::displayError("{}", e.what());
+        return ResponseFactory::badRequest("{}", e.what());
+    }
+    catch (const std::exception &e) {
         Helper::displayError("{}", e.what());
         return ResponseFactory::serverError("An unexpected error had occurred in the server");
     }
@@ -207,8 +211,10 @@ Response PokemonController::deletePokemon(const ParsedRequestObject &request) co
         return response;
     } catch (const std::invalid_argument &) {
         return ResponseFactory::badRequest("Invalid pokemon id");
+
     } catch (const std::out_of_range &) {
         return ResponseFactory::badRequest("Invalid pokemon id");
+
     } catch (const std::exception &e) {
         Helper::displayError("{}", e.what());
         return ResponseFactory::serverError("An unexpected error had occurred in the server");

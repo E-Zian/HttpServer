@@ -13,15 +13,15 @@ class UserRepo
 public:
 	explicit UserRepo(SQLite::Database& db) :db_{ db } {};
 
-	std::optional<User> createUser(const User &newUser) const;
+	[[nodiscard]] std::optional<User> createUser(const UserModel::DTO::CreateUserRequest &createUserRequest) const;
 
-	std::optional<std::vector<User>> getAllUser() const;
+	[[nodiscard]] std::optional<std::vector<User>> getAllUser() const;
 
-	std::optional<User> getUserById(int id) const;
+	[[nodiscard]] std::optional<User> getUserById(int id) const;
 
-	std::optional<User> updateUserById(int id, const User &newUser) const;
+	[[nodiscard]] std::optional<User> updateUser(const User &updateUserRequest) const;
 
-	bool deleteUserById(int id) const;
+	[[nodiscard]] bool deleteUserById(int id) const;
 
 private:
 	SQLite::Database& db_;

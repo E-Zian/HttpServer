@@ -2,34 +2,35 @@
 
 #include "Helper.h"
 
-std::optional<UserRepo::User> UserRepo::createUser(const User &newUser) const {
+std::optional<UserRepo::User> UserRepo::createUser(const UserModel::DTO::CreateUserRequest &createUserRequest) const {
     try {
         SQLite::Transaction transaction{db_};
-        SQLite::Statement checkExist{db_, "SELECT COUNT(*) FROM users WHERE id = :id"};
-        checkExist.bind(":id", newUser.id);
+        SQLite::Statement checkExist{db_, "SELECT COUNT(*) FROM users WHERE email = :email"};
+        checkExist.bind(":email", createUserRequest.email);
 
         checkExist.executeStep();
 
         if (checkExist.getColumn(0).getInt() >= 1) {
-            throw SQLite::Exception{"User already exists"};
+            throw UserModel::Error::UserAlreadyExistsException{createUserRequest.email};
         }
 
         SQLite::Statement createStatement{db_, "INSERT INTO users (name,email) VALUES (:name,:email)"};
-        createStatement.bind(":name", newUser.name);
-        createStatement.bind(":email", newUser.email);
+        createStatement.bind(":name", createUserRequest.name);
+        createStatement.bind(":email", createUserRequest.email);
 
         createStatement.executeStep();
 
         transaction.commit();
+        const User createdUser{static_cast<int>(db_.getLastInsertRowid()),createUserRequest.name,createUserRequest.email};
 
-        return newUser;
+        return createdUser;
     } catch (SQLite::Exception &exception) {
         Helper::displayError("{}", exception.what());
         return std::nullopt;
     }
 }
 
-std::optional<std::vector<UserRepo::User> > UserRepo::getAllUser() const {
+std::optional<std::vector<UserRepo::User>> UserRepo::getAllUser() const {
     try {
         std::vector<UserRepo::User> users;
 
@@ -52,7 +53,7 @@ std::optional<UserRepo::User> UserRepo::getUserById(const int id) const {
         fetchStatement.bind(":id", id);
 
         if (!fetchStatement.executeStep()) {
-            throw SQLite::Exception{"User does not exist"};
+            throw UserModel::Error::UserNotFoundException{id};
         }
 
         UserRepo::User user{
@@ -68,27 +69,27 @@ std::optional<UserRepo::User> UserRepo::getUserById(const int id) const {
     }
 }
 
-std::optional<UserRepo::User> UserRepo::updateUserById(const int id, const User &newUser) const {
+std::optional<UserRepo::User> UserRepo::updateUser(const User &updateUserRequest) const {
     try {
         SQLite::Transaction transaction{db_};
 
         SQLite::Statement checkExist{db_,"SELECT COUNT(*) FROM users WHERE id = :id"};
-        checkExist.bind(":id", id);
+        checkExist.bind(":id", updateUserRequest.id);
         checkExist.executeStep();
         if (checkExist.getColumn(0).getInt() ==0) {
-            throw SQLite::Exception{"User does not exist"};
+            throw UserModel::Error::UserNotFoundException{updateUserRequest.id};
         }
 
         SQLite::Statement updateStatement{db_, "UPDATE users SET name = :name, email = :email WHERE id = :id"};
-        updateStatement.bind(":name", newUser.name);
-        updateStatement.bind(":email", newUser.email);
-        updateStatement.bind(":id", id);
+        updateStatement.bind(":name", updateUserRequest.name);
+        updateStatement.bind(":email", updateUserRequest.email);
+        updateStatement.bind(":id", updateUserRequest.id);
 
         updateStatement.executeStep();
 
         transaction.commit();
 
-        return newUser;
+        return updateUserRequest;
 
     }catch (SQLite::Exception &exception) {
         Helper::displayError("{}",exception.what());

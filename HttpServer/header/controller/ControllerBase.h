@@ -5,7 +5,7 @@
 
 class ControllerBase {
 public:
-	ControllerBase(const Router& router);
+	explicit ControllerBase(const Router& router);
 
 protected:
 	const Router& router_;

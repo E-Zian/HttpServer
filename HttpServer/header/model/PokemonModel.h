@@ -4,6 +4,7 @@
 
 #include <string>
 #include <nlohmann/json.hpp>
+
 namespace PokemonModel {
 	struct Pokemon {
 		int id;
@@ -41,6 +42,17 @@ namespace PokemonModel {
 		inline void from_json(const nlohmann::json& json, PokemonModel::DTO::UpdatePokemonRequest& updatePokemonRequest) {
 			json.at("name").get_to(updatePokemonRequest.name);
 		}
+	}
+	namespace Error {
+		class PokemonAlreadyExistsException : public std::runtime_error {
+		public:
+			explicit PokemonAlreadyExistsException(const std::string& name)
+				: std::runtime_error("Pokemon '" + name + "' already exists") {}
+		};
+		class PokemonNotFoundException : public std::runtime_error {
+			public:
+			explicit PokemonNotFoundException(const int id):runtime_error("Pokemon with id '"+std::to_string(id)+"' not found"){};
+		};
 	}
 };
 

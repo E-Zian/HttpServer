@@ -9,6 +9,8 @@
 #include <fmt/color.h>
 #include <windows.h>
 
+#include "controller/UserController.h"
+
 int main() {
     // To display color in terminal
     const HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -24,11 +26,11 @@ int main() {
     const Router router{};
     // Repo Setup
     const PokemonRepo pokemonRepo{db.get()};
-    UserRepo userRepo{db.get()};
+    const UserRepo userRepo{db.get()};
 
     TestingController testingController{router};
     PokemonController pokemonController{router, pokemonRepo};
-
+    UserController userController{router, userRepo};
 
     HttpServer server(io,6767,router);
 

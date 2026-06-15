@@ -9,7 +9,7 @@ std::optional<PokemonModel::Pokemon> PokemonRepo::createPokemon(const PokemonMod
         checkExist.bind(":name", newPokemon.name);
         checkExist.executeStep();
         if (checkExist.getColumn(0).getInt() >= 1) {
-            throw PokemonAlreadyExistsException{ newPokemon.name };
+            throw PokemonModel::Error::PokemonAlreadyExistsException{ newPokemon.name };
         }
 
         SQLite::Statement createStatement{db_, "INSERT INTO pokemons (name) VALUES(:name)"};
@@ -17,7 +17,7 @@ std::optional<PokemonModel::Pokemon> PokemonRepo::createPokemon(const PokemonMod
 
         createStatement.exec();
 
-        Pokemon createdPokemon{db_.getLastInsertRowid(), newPokemon.name};
+        Pokemon createdPokemon{static_cast<int>(db_.getLastInsertRowid()), newPokemon.name};
         transaction.commit();
 
         return createdPokemon;
@@ -52,7 +52,7 @@ std::optional<PokemonRepo::Pokemon> PokemonRepo::updatePokemon(const Pokemon& up
         checkExist.bind(":id", updatePokemonRequest.id);
         checkExist.executeStep();
         if (checkExist.getColumn(0).getInt() == 0) {
-            throw SQLite::Exception{"Pokemon does not exists"};
+            throw PokemonModel::Error::PokemonNotFoundException{ updatePokemonRequest.id };
         }
 
         SQLite::Statement updateStatement{db_, "UPDATE pokemons SET name = :name WHERE id = :id"};
