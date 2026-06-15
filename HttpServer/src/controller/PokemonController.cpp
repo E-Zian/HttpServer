@@ -82,10 +82,16 @@ Response PokemonController::createPokemon(ParsedRequestObject &request) const {
     } catch (const nlohmann::json::parse_error &e) {
         Helper::displayError("{}", e.what());
         return ResponseFactory::badRequest("Invalid JSON");
+
     } catch (const nlohmann::json::exception &e) {
         Helper::displayError("{}", e.what());
         return ResponseFactory::badRequest("Invalid pokemon data");
-    } catch (const std::exception &e) {
+
+    }catch (const PokemonAlreadyExistsException& e) {
+        Helper::displayError("{}", e.what());
+        return ResponseFactory::badRequest("{}", e.what());
+
+    }catch (const std::exception &e) {
         Helper::displayError("{}", e.what());
         return ResponseFactory::serverError("An unexpected error had occurred in the server");
     }
@@ -114,14 +120,17 @@ Response PokemonController::getPokemon(const ParsedRequestObject &request) const
         response.header["Content-Length"] = std::to_string(response.body.size());
 
         return response;
+
     } catch (const std::invalid_argument& e) {
         Helper::displayError("{}", e.what());
 
         return ResponseFactory::badRequest("Invalid pokemon id");
+
     } catch (const std::out_of_range& e) {
         Helper::displayError("{}", e.what());
 
         return ResponseFactory::badRequest("Invalid pokemon id");
+
     }catch (const std::exception &e) {
         Helper::displayError("{}", e.what());
         return ResponseFactory::serverError("An unexpected error had occurred in the server");
@@ -161,11 +170,14 @@ Response PokemonController::updatePokemon(const ParsedRequestObject &request) co
         return response;
     } catch (const std::invalid_argument &) {
         return ResponseFactory::badRequest("Invalid pokemon id");
+
     } catch (const std::out_of_range &) {
         return ResponseFactory::badRequest("Invalid pokemon id");
+
     } catch (const nlohmann::json::exception &e) {
         Helper::displayError("{}", e.what());
         return ResponseFactory::badRequest("Invalid request data");
+
     } catch (const std::exception &e) {
         Helper::displayError("{}", e.what());
         return ResponseFactory::serverError("An unexpected error had occurred in the server");

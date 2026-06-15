@@ -5,6 +5,11 @@
 #include "database/Database.h"
 #include "model/PokemonModel.h"
 #include <vector>
+class PokemonAlreadyExistsException : public std::runtime_error {
+public:
+	explicit PokemonAlreadyExistsException(const std::string& name)
+		: std::runtime_error("Pokemon '" + name + "' already exists") {}
+};
 
 class PokemonRepo{
 	using Pokemon = PokemonModel::Pokemon;

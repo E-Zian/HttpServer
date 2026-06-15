@@ -9,7 +9,7 @@ std::optional<PokemonModel::Pokemon> PokemonRepo::createPokemon(const PokemonMod
         checkExist.bind(":name", newPokemon.name);
         checkExist.executeStep();
         if (checkExist.getColumn(0).getInt() >= 1) {
-            throw SQLite::Exception{"Pokemon already exists"};
+            throw PokemonAlreadyExistsException{ newPokemon.name };
         }
 
         SQLite::Statement createStatement{db_, "INSERT INTO pokemons (name) VALUES(:name)"};
