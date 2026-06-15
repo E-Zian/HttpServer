@@ -123,6 +123,10 @@ Connection::~Connection() {
 }
 
 asio::awaitable<void> Connection::startRead() {
+	try {
+
+	
+
 	auto self{ shared_from_this() };
 	std::array<char, 128> receivingBuffer{};
 
@@ -200,30 +204,52 @@ asio::awaitable<void> Connection::startRead() {
 		const int contentLength{ std::stoi(parsedRequest_.header["Content-Length"]) };
 		std::vector<char> receivingBodyBuffer(contentLength);
 
-		size_t len{ co_await asio::async_read(socket_, asio::buffer(receivingBodyBuffer, contentLength), asio::use_awaitable) };
-
-		requestReceived_.insert(requestReceived_.end(), receivingBodyBuffer.begin(), receivingBodyBuffer.begin() + len);
-
 		// 4 represents the double carriage return and new line
+		while (requestReceived_.size() - request_.header.size() - 4 < contentLength) {
+
+			size_t len{ co_await socket_.async_read_some(asio::buffer(receivingBodyBuffer),asio::redirect_error(asio::use_awaitable, ec)) };
+
+			if (ec) {
+				Helper::displayError("Error Connection ID ({}) Request Failed: {}", connectionId_, ec.message());
+				break;
+			}
+
+			requestReceived_.insert(requestReceived_.end(), receivingBodyBuffer.begin(), receivingBodyBuffer.begin() + len);
+		}
+		Helper::displayMessage("requestReceived_.size()={}, header.size()={}, delimiterPos={}, contentLength={}",
+			requestReceived_.size(), request_.header.size(), delimiterPosition.value(), contentLength);
+		if (ec) {
+
+			co_await writeResponse(ResponseFactory::serverError("Internal Server Error: An unexpected error occured"));
+			Helper::displayError("Error Connection ID ({}) Request Failed: {}", connectionId_, ec.message());
+			co_return;
+		}
+
 		request_.body = std::string_view(&requestReceived_[delimiterPosition.value() + static_cast<size_t>(4)],
 			contentLength);
+
+		Helper::displayMessage("Body Received from Connection Id ({})\n{}", connectionId_, request_.body);
 
 		parsedRequest_.body = request_.body;
 	}
 
 	Response response{ dispatcher_.dispatch(std::string(parsedRequest_.route),parsedRequest_) };
 	co_await writeResponse(response);
+	}
+	catch (std::exception& e) {
+		Helper::displayError("{}", e.what());
+	}
 }
 
 asio::awaitable<void> Connection::writeResponse(const Response& response) {
-	auto self{ shared_from_this() };
+		auto self{ shared_from_this() };
 
-	const std::string statusLine{statusToStatusLine(response.status)};
-	const std::string headerLines{headerToString(response.header)};
+		const std::string statusLine{ statusToStatusLine(response.status) };
+		const std::string headerLines{ headerToString(response.header) };
 
-	std::string parsedResponse{ statusLine + "\r\n" + headerLines + "\r\n" + response.body };
-	Helper::displayMessage("{}",parsedResponse);
-	co_await asio::async_write(socket_, asio::buffer(parsedResponse), asio::use_awaitable);
+		std::string parsedResponse{ statusLine + "\r\n" + headerLines + "\r\n" + response.body };
+		Helper::displayMessage("{}", parsedResponse);
+		co_await asio::async_write(socket_, asio::buffer(parsedResponse), asio::use_awaitable);
 
 }
 
