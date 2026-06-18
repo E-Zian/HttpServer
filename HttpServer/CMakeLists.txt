@@ -1,27 +1,27 @@
 ﻿add_executable(HttpServer 
 "src/HttpServer.cpp" 
-"header/HttpServer.h" 
+"include/HttpServer.h"
 "src/main.cpp" 
 "src/Connection.cpp" 
-"header/Connection.h" 
-"header/Helper.h" 
+"include/Connection.h"
+"include/Helper.h"
 "src/Helper.cpp"   
-"header/model/HttpTypes.h" 
+"include/model/HttpTypes.h"
 "src/Router.cpp" 
-"header/Router.h" 
-"header/ResponseFactory.h" 
+"include/Router.h"
+"include/ResponseFactory.h"
 "src/ResponseFactory.cpp"
 "src/controller/TestingController.cpp"
-"header/controller/TestingController.h" 
+"include/controller/TestingController.h"
 "src/controller/ControllerBase.cpp" 
-"header/controller/ControllerBase.h"
-"header/Interface/Idispatcher.h"  
-"header/database/Database.h" 
+"include/controller/ControllerBase.h"
+"include/Interface/Idispatcher.h"
+"include/database/Database.h"
 "src/database/database.cpp"
  "src/repository/UserRepo.cpp" 
  "src/repository/PokemonRepo.cpp" 
- "header/repository/UserRepo.h" 
- "header/repository/PokemonRepo.h" "header/model/UserModel.h" "header/model/PokemonModel.h" "header/controller/UserController.h" "header/controller/PokemonController.h" "src/controller/UserController.cpp" "src/controller/PokemonController.cpp")
+ "include/repository/UserRepo.h"
+ "include/repository/PokemonRepo.h" "include/model/UserModel.h" "include/model/PokemonModel.h" "include/controller/UserController.h" "include/controller/PokemonController.h" "src/controller/UserController.cpp" "src/controller/PokemonController.cpp")
 
 # Define Windows version for ASIO
 target_compile_definitions(HttpServer PRIVATE _WIN32_WINNT=0x0A00)
@@ -44,4 +44,4 @@ find_package(SQLiteCpp CONFIG REQUIRED)
 target_link_libraries(HttpServer PRIVATE SQLiteCpp)
 
 target_include_directories(HttpServer PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
-target_include_directories(HttpServer PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/header)
+target_include_directories(HttpServer PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
