@@ -9,6 +9,7 @@
 #include <fmt/color.h>
 #include <windows.h>
 
+#include "AssetManager.h"
 #include "controller/UserController.h"
 
 int main() {
@@ -22,6 +23,10 @@ int main() {
     // ------------------------------------
     DataBase db{ "server.db" };
     asio::io_context io;
+
+    // Asset Manager
+    AssetManager assetManager {AssetManager::getInstance()};
+    assetManager.loadAsset("assets/images/quagsire.ico","image/x-icon",);
 
     const Router router{};
     // Repo Setup

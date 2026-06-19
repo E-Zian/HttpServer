@@ -34,7 +34,11 @@ add_executable(HttpServer
         "src/repository/UserRepo.cpp"
         "src/repository/PokemonRepo.cpp"
         "include/repository/UserRepo.h"
-        "include/repository/PokemonRepo.h" "include/model/UserModel.h" "include/model/PokemonModel.h" "include/controller/UserController.h" "include/controller/PokemonController.h" "src/controller/UserController.cpp" "src/controller/PokemonController.cpp")
+        "include/repository/PokemonRepo.h" "include/model/UserModel.h" "include/model/PokemonModel.h" "include/controller/UserController.h" "include/controller/PokemonController.h" "src/controller/UserController.cpp" "src/controller/PokemonController.cpp"
+        src/controller/HomeController.cpp
+        include/controller/HomeController.h
+        src/AssetManager.cpp
+        include/AssetManager.h)
 
 # Define Windows version for ASIO
 target_compile_definitions(HttpServer PRIVATE _WIN32_WINNT=0x0A00)
@@ -56,6 +60,6 @@ target_link_libraries(HttpServer PRIVATE nlohmann_json::nlohmann_json)
 find_package(SQLiteCpp CONFIG REQUIRED)
 target_link_libraries(HttpServer PRIVATE SQLiteCpp)
 
-target_include_directories(HttpServer PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
-target_include_directories(HttpServer PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(HttpServer PRIVATE src)
+target_include_directories(HttpServer PRIVATE include)
 
