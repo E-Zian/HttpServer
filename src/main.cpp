@@ -26,7 +26,7 @@ int main() {
 
     // Asset Manager
     AssetManager assetManager {AssetManager::getInstance()};
-    assetManager.loadAsset("assets/images/quagsire.ico","image/x-icon",);
+    // assetManager.loadAsset("assets/images/quagsire.ico","image/x-icon",);
 
     const Router router{};
     // Repo Setup
