@@ -25,7 +25,7 @@ int main() {
     asio::io_context io;
 
     // Asset Manager
-    AssetManager assetManager {AssetManager::getInstance()};
+    AssetManager& assetManager {AssetManager::getInstance()};
     // assetManager.loadAsset("assets/images/quagsire.ico","image/x-icon",);
 
     const Router router{};

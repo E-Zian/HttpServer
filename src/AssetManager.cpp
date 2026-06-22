@@ -13,10 +13,11 @@ const AssetManager::Asset& AssetManager::get(const std::string &assetName) const
 }
 
 void AssetManager::loadAsset(const std::string &path,const std::string& contentType ,const std::string &assetName) {
-    std::ifstream file(path,std::ios::binary | std::ios::end);
+    std::ifstream file(path,std::ios::binary | std::ios::ate);
 
     if (!file.is_open()) {
         Helper::displayError("cant load {} ",path);
+        throw std::runtime_error("cant load "+path);
     }
 
     const std::streamsize size {file.tellg()};

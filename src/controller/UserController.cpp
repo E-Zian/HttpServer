@@ -203,9 +203,9 @@ Response UserController::deleteUser(const ParsedRequestObject &request) const {
 
         return response;
     } catch (const std::invalid_argument &) {
-        return ResponseFactory::badRequest("Invalid pokemon id");
+        return ResponseFactory::badRequest("Invalid user id");
     } catch (const std::out_of_range &) {
-        return ResponseFactory::badRequest("Invalid pokemon id");
+        return ResponseFactory::badRequest("Invalid user id");
     } catch (const std::exception &e) {
         Helper::displayError("{}", e.what());
         return ResponseFactory::serverError("An unexpected error had occurred in the server");
