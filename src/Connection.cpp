@@ -1,6 +1,7 @@
 #include "Connection.h"
 #include "Helper.h"
 #include "ResponseFactory.h"
+#include <asio/experimental/awaitable_operators.hpp>
 #include <iostream>
 #include <asio.hpp>
 #include <fmt/core.h>
@@ -151,9 +152,9 @@ asio::awaitable<void> Connection::startRead() {
 
         const auto requestLine{getHeaderLine(request_.header, startingPosition)};
 
-        auto parseRequestLineComponents{parseRequestLine(requestLine)};
+        auto parsedRequestLineComponents{parseRequestLine(requestLine)};
 
-        if (!parseRequestLineComponents.has_value()) {
+        if (!parsedRequestLineComponents.has_value()) {
             Helper::displayError("Error Connection ID ({}) Request Failed: {}", connectionId_,
                                  "Malformed Request Line Received");
 
@@ -162,13 +163,21 @@ asio::awaitable<void> Connection::startRead() {
 
             co_return;
         };
-        auto methodIt{methodMap.find(parseRequestLineComponents.value()[0])};
+
+        auto methodIt{methodMap.find(parsedRequestLineComponents.value()[0])};
         if (methodIt == methodMap.end()) {
-            methodIt = methodMap.find("GET");
+            
+            Helper::displayError("Error Connection ID ({}) Request Failed: {}", connectionId_,
+                "Unsupported Method");
+
+            co_await writeResponse(
+                ResponseFactory::badRequest("Request Failed: Unsupported Method {}", parsedRequestLineComponents.value()[0]));
+            co_return;
         }
+
         parsedRequest_.method = methodIt->second;
-        parsedRequest_.route = parseRequestLineComponents.value()[1];
-        parsedRequest_.httpVersion = parseRequestLineComponents.value()[2];
+        parsedRequest_.route = parsedRequestLineComponents.value()[1];
+        parsedRequest_.httpVersion = parsedRequestLineComponents.value()[2];
 
 
         while (startingPosition != request_.header.length()) {
