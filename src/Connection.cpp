@@ -176,9 +176,8 @@ asio::awaitable<void> Connection::startRead() {
         }
 
         parsedRequest_.method = methodIt->second;
-        parsedRequest_.route = parsedRequestLineComponents.value()[1];
-        parsedRequest_.httpVersion = parsedRequestLineComponents.value()[2];
-
+        parsedRequest_.route = std::string(parsedRequestLineComponents.value()[1]);
+        parsedRequest_.httpVersion = std::string(parsedRequestLineComponents.value()[2]);
 
         while (startingPosition != request_.header.length()) {
             std::string headerLine{getHeaderLine(request_.header, startingPosition)};
@@ -226,7 +225,7 @@ asio::awaitable<void> Connection::startRead() {
             parsedRequest_.body = request_.body;
         }
 
-        Response response{dispatcher_.dispatch(std::string(parsedRequest_.route), parsedRequest_)};
+        Response response{dispatcher_.dispatch(parsedRequest_.route, parsedRequest_)};
         co_await writeResponse(response);
     } catch (std::exception &e) {
         Helper::displayError("{}", e.what());

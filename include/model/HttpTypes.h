@@ -24,8 +24,8 @@ struct RequestObject {
 
 struct ParsedRequestObject {
 	Method method;
-	std::string_view route;
-	std::string_view httpVersion;
+	std::string route;
+	std::string httpVersion;
 	std::unordered_map<std::string, std::string> header{};
     std::string_view body;
     std::unordered_map<std::string, std::string> parameterValues{};
