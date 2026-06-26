@@ -17,17 +17,13 @@ enum class Method {
     OPTIONS
 };
 
-struct RequestObject {
-    std::string_view header;
-    std::string_view body;
-};
 
 struct ParsedRequestObject {
 	Method method;
 	std::string route;
 	std::string httpVersion;
 	std::unordered_map<std::string, std::string> header{};
-    std::string_view body;
+    std::string body;
     std::unordered_map<std::string, std::string> parameterValues{};
 
 };

@@ -22,7 +22,6 @@ private:
 	tcp::socket socket_;
 	int connectionId_;
 	std::string requestReceived_{};
-	RequestObject request_;
 	ParsedRequestObject parsedRequest_{};
 	const IDispatcher& dispatcher_;
 

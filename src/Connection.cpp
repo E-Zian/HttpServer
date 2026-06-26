@@ -130,7 +130,6 @@ asio::awaitable<void> Connection::startRead() {
                                                  asio::use_awaitable)
             };
 
-
             requestReceived_.insert(requestReceived_.end(), receivingBuffer.begin(), receivingBuffer.begin() + len);
 
             delimiterPosition = parseRequestForHeader(
@@ -146,11 +145,11 @@ asio::awaitable<void> Connection::startRead() {
         Helper::displayMessage("Headers Received from Connection Id ({})\n{}", connectionId_,
                                std::string_view(requestReceived_.data(), delimiterPosition.value()));
 
-        request_.header = std::string_view(requestReceived_.data(), delimiterPosition.value());
+        const auto rawHeader = std::string(requestReceived_.data(), delimiterPosition.value());
 
         size_t startingPosition{};
 
-        const auto requestLine{getHeaderLine(request_.header, startingPosition)};
+        const auto requestLine{getHeaderLine(rawHeader, startingPosition)};
 
         auto parsedRequestLineComponents{parseRequestLine(requestLine)};
 
@@ -179,8 +178,8 @@ asio::awaitable<void> Connection::startRead() {
         parsedRequest_.route = std::string(parsedRequestLineComponents.value()[1]);
         parsedRequest_.httpVersion = std::string(parsedRequestLineComponents.value()[2]);
 
-        while (startingPosition != request_.header.length()) {
-            std::string headerLine{getHeaderLine(request_.header, startingPosition)};
+        while (startingPosition != rawHeader.length()) {
+            std::string headerLine{getHeaderLine(rawHeader, startingPosition)};
 
             std::optional<std::pair<std::string, std::string> > headerPair{parseHeaderLine(headerLine)};
             if (!headerPair.has_value()) {
@@ -202,7 +201,7 @@ asio::awaitable<void> Connection::startRead() {
             std::vector<char> receivingBodyBuffer(contentLength);
 
             // 4 represents the double carriage return and new line
-            while (requestReceived_.size() - request_.header.size() - 4 < contentLength) {
+            while (requestReceived_.size() - rawHeader.size() - 4 < contentLength) {
                 size_t len{
                     co_await socket_.async_read_some(asio::buffer(receivingBodyBuffer),
                                                      asio::use_awaitable)
@@ -213,16 +212,15 @@ asio::awaitable<void> Connection::startRead() {
                                         receivingBodyBuffer.begin() + static_cast<long long>(len));
             }
             Helper::displayMessage("requestReceived_.size()={}, header.size()={}, delimiterPos={}, contentLength={}",
-                                   requestReceived_.size(), request_.header.size(), delimiterPosition.value(),
+                                   requestReceived_.size(), rawHeader.size(), delimiterPosition.value(),
                                    contentLength);
 
 
-            request_.body = std::string_view(&requestReceived_[delimiterPosition.value() + static_cast<size_t>(4)],
+            parsedRequest_.body = std::string(&requestReceived_[delimiterPosition.value() + static_cast<size_t>(4)],
                                              contentLength);
 
-            Helper::displayMessage("Body Received from Connection Id ({})\n{}", connectionId_, request_.body);
+            Helper::displayMessage("Body Received from Connection Id ({})\n{}", connectionId_, parsedRequest_.body);
 
-            parsedRequest_.body = request_.body;
         }
 
         Response response{dispatcher_.dispatch(parsedRequest_.route, parsedRequest_)};
