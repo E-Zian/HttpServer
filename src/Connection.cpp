@@ -5,7 +5,6 @@
 #include <iostream>
 #include <asio.hpp>
 #include <fmt/core.h>
-#include <cctype>
 #include <algorithm>
 
 namespace {
@@ -97,7 +96,7 @@ namespace {
         std::string headerLines{};
         headerLines.reserve(header.size() * 50);
 
-        for (auto &headerPair: header) {
+        for (const auto &headerPair: header) {
             headerLines += headerPair.first + ": " + headerPair.second + "\r\n";
         }
         return headerLines;
@@ -135,9 +134,8 @@ asio::awaitable<void> Connection::handleRequest() {
 
     asio::steady_timer timeOutTimer{ co_await asio::this_coro::executor };
 
-    bool keepAlive{};
-
     try {
+        bool keepAlive{};
         do {
             timeOutTimer.expires_after(std::chrono::seconds(10));
             auto result = co_await(
@@ -193,7 +191,7 @@ asio::awaitable<bool> Connection::processRequest() {
                 co_return false;
             }
 
-            requestReceived_.insert(requestReceived_.end(), receivingBuffer.begin(), receivingBuffer.begin() + len);
+            requestReceived_.insert(requestReceived_.end(), receivingBuffer.begin(), receivingBuffer.begin() + static_cast<long long>(len));
 
             delimiterPosition = parseRequestForDelimiter(
                 std::string_view(requestReceived_.data(), requestReceived_.size()));
