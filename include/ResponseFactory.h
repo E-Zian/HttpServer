@@ -63,6 +63,22 @@ namespace ResponseFactory {
 		return response;
 	}
 
+	template<typename...Args>
+	Response requestTimeout(fmt::format_string<Args...> fmt_string,Args&&... args) {
+		const std::string message{ fmt::format(fmt_string,std::forward<Args>(args)...) };
+
+		nlohmann::json json;
+		json["errorMessage"] = message;
+
+		Response response{ HttpStatus::REQUEST_TIMEOUT,{},json.dump() };
+
+		response.header["Content-Type"] = "application/json";
+		response.header["Connection"] = "close";
+		response.header["Content-Length"] = std::to_string(response.body.size());
+
+		return response;
+	}
+
 }
 
 #endif //RESPONSEFACTORY_H

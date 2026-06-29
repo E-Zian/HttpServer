@@ -16,7 +16,8 @@ public:
 
 	~Connection();
 
-	asio::awaitable<void> startRead();
+	asio::awaitable<void> handleRequest();
+
 
 private:
 	tcp::socket socket_;
@@ -28,6 +29,8 @@ private:
 	Connection(tcp::socket&& connectionSocket, int connectionId,const IDispatcher& dispatcher);
 
 	asio::awaitable<void> writeResponse(const Response& response);
+
+	asio::awaitable<void> startRead();
 
 };
 

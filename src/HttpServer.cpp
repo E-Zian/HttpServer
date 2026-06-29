@@ -30,7 +30,7 @@ asio::awaitable<void> HttpServer::serverListen() {
 
             Helper::displayMessage("Connection ID : {} Connected", HttpServer::totalConnections_);
 
-            asio::co_spawn(io_, connection->startRead(), asio::detached);
+            asio::co_spawn(io_, connection->handleRequest(), asio::detached);
         } catch (std::exception &ex) {
             Helper::displayError("Http Server error , {}", ex.what());
         }

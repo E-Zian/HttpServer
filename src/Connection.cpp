@@ -77,6 +77,10 @@ namespace {
             case HttpStatus::NOT_FOUND:
                 return httpVersion + "404 Not Found";
 
+            case HttpStatus::REQUEST_TIMEOUT:
+                return httpVersion + "408 Request Timeout";
+
+
             default:
                 return httpVersion + "500 Internal Server Error";
         }
@@ -116,6 +120,32 @@ Connection::pointer Connection::create(tcp::socket &&connectionSocket, const int
 
 Connection::~Connection() {
     Helper::displayMessage("Connection ID ({}) Disconnected", connectionId_);
+}
+
+asio::awaitable<void> Connection::handleRequest() {
+    using namespace asio::experimental::awaitable_operators;
+    auto self{ shared_from_this()};
+
+    asio::steady_timer timeOutTimer{ co_await asio::this_coro::executor };
+    timeOutTimer.expires_after(std::chrono::seconds(10));
+
+    try {
+
+        auto result = co_await(
+            startRead()
+            || timeOutTimer.async_wait(asio::use_awaitable)
+            );
+
+        if (result.index() == 1) {        
+            Helper::displayError("Connection ({}) timed out", connectionId_);
+
+            co_await writeResponse(ResponseFactory::requestTimeout("Request timed out"));
+        }
+    }
+    catch (std::exception& e) {
+        Helper::displayError("error occured in handle request : {}", e.what());
+    }
+
 }
 
 asio::awaitable<void> Connection::startRead() {
