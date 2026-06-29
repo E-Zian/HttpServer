@@ -80,6 +80,11 @@ namespace {
             case HttpStatus::REQUEST_TIMEOUT:
                 return httpVersion + "408 Request Timeout";
 
+            case HttpStatus::CONTENT_TOO_LARGE:
+                return httpVersion + "413 Content Too Large";
+
+            case HttpStatus::REQUEST_HEADERS_TOO_LARGE:
+                return httpVersion + "431 Request Headers Too Large";
 
             default:
                 return httpVersion + "500 Internal Server Error";
@@ -150,6 +155,11 @@ asio::awaitable<void> Connection::handleRequest() {
 
 asio::awaitable<void> Connection::startRead() {
     try {
+        constexpr size_t maxHeaderSize{ 8192 };
+        constexpr size_t maxBodySize{ 1024 * 1024 };
+
+        size_t currentHeaderSize{ };
+
         auto self{shared_from_this()};
         std::array<char, 128> receivingBuffer{};
 
@@ -159,6 +169,15 @@ asio::awaitable<void> Connection::startRead() {
                 co_await socket_.async_read_some(asio::buffer(receivingBuffer),
                                                  asio::use_awaitable)
             };
+
+            currentHeaderSize += len;
+
+            if (currentHeaderSize > maxHeaderSize) {
+                Helper::displayMessage("Header Length Received from Connection Id ({}) was too large, value received : {}", connectionId_, currentHeaderSize);
+
+                co_await writeResponse(ResponseFactory::headerTooLarge("Header sent is too large"));
+                co_return;
+            }
 
             requestReceived_.insert(requestReceived_.end(), receivingBuffer.begin(), receivingBuffer.begin() + len);
 
@@ -225,7 +244,7 @@ asio::awaitable<void> Connection::startRead() {
 
         // Has Body
         if (parsedRequest_.header.contains("Content-Length")) {
-            int contentLength{};
+            size_t contentLength{};
             const std::string& contentLentString{ parsedRequest_.header["Content-Length"] };
             const auto [ptr, ec] {std::from_chars(contentLentString.data(), contentLentString.data() + contentLentString.size(), contentLength)};
 
@@ -234,10 +253,11 @@ asio::awaitable<void> Connection::startRead() {
                 co_return;
             }
 
-            if (contentLength < 0) {
-                Helper::displayMessage("Content Length Received from Connection Id ({}) was invalid, value received : {}", connectionId_, contentLength);
 
-                co_await writeResponse(ResponseFactory::badRequest("Content Length of {} is not accepted",contentLength));
+            if (contentLength > maxBodySize) {
+                Helper::displayMessage("Content Length Received from Connection Id ({}) was too large, value received : {}", connectionId_, contentLength);
+
+                co_await writeResponse(ResponseFactory::contentTooLarge("Content Length too large"));
 
                 co_return;
             }

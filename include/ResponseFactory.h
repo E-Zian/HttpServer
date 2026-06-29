@@ -79,6 +79,54 @@ namespace ResponseFactory {
 		return response;
 	}
 
+	template<typename...Args>
+	Response headerTooLarge(fmt::format_string<Args...> fmt_string,Args&&... args) {
+		const std::string message{ fmt::format(fmt_string,std::forward<Args>(args)...) };
+
+		nlohmann::json json;
+		json["errorMessage"] = message;
+
+		Response response{ HttpStatus::REQUEST_HEADERS_TOO_LARGE,{},json.dump() };
+
+		response.header["Content-Type"] = "application/json";
+		response.header["Connection"] = "close";
+		response.header["Content-Length"] = std::to_string(response.body.size());
+
+		return response;
+	}
+
+	template<typename...Args>
+	Response contentTooLarge(fmt::format_string<Args...> fmt_string,Args&&... args) {
+		const std::string message{ fmt::format(fmt_string,std::forward<Args>(args)...) };
+
+		nlohmann::json json;
+		json["errorMessage"] = message;
+
+		Response response{ HttpStatus::CONTENT_TOO_LARGE,{},json.dump() };
+
+		response.header["Content-Type"] = "application/json";
+		response.header["Connection"] = "close";
+		response.header["Content-Length"] = std::to_string(response.body.size());
+
+		return response;
+	}
+
+	template<typename...Args>
+	Response failedResponse(HttpStatus status,fmt::format_string<Args...> fmt_string,Args&&... args) {
+		const std::string message{ fmt::format(fmt_string,std::forward<Args>(args)...) };
+
+		nlohmann::json json;
+		json["errorMessage"] = message;
+
+		Response response{ status,{},json.dump() };
+
+		response.header["Content-Type"] = "application/json";
+		response.header["Connection"] = "close";
+		response.header["Content-Length"] = std::to_string(response.body.size());
+
+		return response;
+	}
+
 }
 
 #endif //RESPONSEFACTORY_H

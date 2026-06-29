@@ -33,6 +33,8 @@ enum class HttpStatus {
     BAD_REQUEST = 400,
     NOT_FOUND = 404,
     REQUEST_TIMEOUT = 408,
+    CONTENT_TOO_LARGE = 413,
+    REQUEST_HEADERS_TOO_LARGE = 431,
     SERVER_ERROR = 500
 };
 
