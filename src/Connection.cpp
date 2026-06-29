@@ -134,20 +134,27 @@ asio::awaitable<void> Connection::handleRequest() {
     auto self{ shared_from_this()};
 
     asio::steady_timer timeOutTimer{ co_await asio::this_coro::executor };
-    timeOutTimer.expires_after(std::chrono::seconds(10));
+
+    bool keepAlive{};
 
     try {
+        do {
+            timeOutTimer.expires_after(std::chrono::seconds(10));
+            auto result = co_await(
+                processRequest()
+                || timeOutTimer.async_wait(asio::use_awaitable)
+                );
 
-        auto result = co_await(
-            processRequest()
-            || timeOutTimer.async_wait(asio::use_awaitable)
-            );
+            if (result.index() == 1) {
+                Helper::displayError("Connection ({}) timed out", connectionId_);
 
-        if (result.index() == 1) {        
-            Helper::displayError("Connection ({}) timed out", connectionId_);
+                co_await writeResponse(ResponseFactory::requestTimeout("Request timed out"));
+                co_return;
+            }
+            keepAlive = std::get<0>(result);
 
-            co_await writeResponse(ResponseFactory::requestTimeout("Request timed out"));
-        }
+        } while (keepAlive);
+
     }
     catch (std::exception& e) {
         Helper::displayError("error occured in handle request : {}", e.what());
@@ -155,17 +162,15 @@ asio::awaitable<void> Connection::handleRequest() {
 
 }
 
-asio::awaitable<void> Connection::processRequest() {
+asio::awaitable<bool> Connection::processRequest() {
     try {
         auto self{ shared_from_this() };
 
         constexpr size_t maxHeaderSize{ 8192 };
         constexpr size_t maxBodySize{ 1024 * 1024 };
 
-
         bool keepAlive_{};
 
-        do {
         parsedRequest_ = {};
         requestReceived_ = {};
         size_t currentHeaderSize{ };
@@ -185,7 +190,7 @@ asio::awaitable<void> Connection::processRequest() {
                 Helper::displayMessage("Header Length Received from Connection Id ({}) was too large, value received : {}", connectionId_, currentHeaderSize);
 
                 co_await writeResponse(ResponseFactory::headerTooLarge("Header sent is too large"));
-                co_return;
+                co_return false;
             }
 
             requestReceived_.insert(requestReceived_.end(), receivingBuffer.begin(), receivingBuffer.begin() + len);
@@ -197,7 +202,7 @@ asio::awaitable<void> Connection::processRequest() {
         // Display Header
         // Used to remove warning of std::optional delimiterPosition
         if (!delimiterPosition) {
-            co_return;
+            co_return false;
         }
         Helper::displayMessage("Headers Received from Connection Id ({})\n{}", connectionId_,
                                std::string_view(requestReceived_.data(), delimiterPosition.value()));
@@ -217,7 +222,7 @@ asio::awaitable<void> Connection::processRequest() {
             co_await writeResponse(
                 ResponseFactory::badRequest("Request Failed: Malformed request line received on {}", requestLine));
 
-            co_return;
+            co_return false;
         };
 
         auto methodIt{methodMap.find(parsedRequestLineComponents.value()[0])};
@@ -228,7 +233,7 @@ asio::awaitable<void> Connection::processRequest() {
 
             co_await writeResponse(
                 ResponseFactory::badRequest("Request Failed: Unsupported Method {}", parsedRequestLineComponents.value()[0]));
-            co_return;
+            co_return false;
         }
 
         parsedRequest_.method = methodIt->second;
@@ -245,7 +250,7 @@ asio::awaitable<void> Connection::processRequest() {
 
                 co_await writeResponse(
                     ResponseFactory::badRequest("Request Failed: Malformed header line received on {}", headerLine));
-                co_return;
+                co_return false;
             }
             parsedRequest_.header[headerPair.value().first] = headerPair.value().second;
         }
@@ -259,7 +264,7 @@ asio::awaitable<void> Connection::processRequest() {
 
             if (ec != std::errc{} || ptr != contentLentString.data() + contentLentString.size()) {
                 co_await writeResponse(ResponseFactory::badRequest("Invalid Content-Length: {}", contentLentString));
-                co_return;
+                co_return false;
             }
 
 
@@ -268,7 +273,7 @@ asio::awaitable<void> Connection::processRequest() {
 
                 co_await writeResponse(ResponseFactory::contentTooLarge("Content Length too large"));
 
-                co_return;
+                co_return false;
             }
 
             std::vector<char> receivingBodyBuffer(contentLength);
@@ -316,13 +321,12 @@ asio::awaitable<void> Connection::processRequest() {
         co_await writeResponse(response);
 
 
-        } while (keepAlive_);
 
-        co_return;
+        co_return keepAlive_;
 
     } catch (std::exception &e) {
         Helper::displayError("{}", e.what());
-
+        co_return false;
     }
 }
 

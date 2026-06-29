@@ -30,7 +30,7 @@ private:
 
 	asio::awaitable<void> writeResponse(const Response& response);
 
-	asio::awaitable<void> processRequest();
+	asio::awaitable<bool> processRequest();
 
 };
 
