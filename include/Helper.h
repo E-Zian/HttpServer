@@ -25,6 +25,7 @@ namespace Helper {
 
 	std::vector<std::string> split(const std::string& text, const char delimiter);
 
+	std::string toLower(std::string& text);
 }
 
 #endif 

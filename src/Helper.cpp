@@ -29,3 +29,8 @@ std::vector<std::string> Helper::split(const std::string& text, const char delim
     return stringComponents;
 }
 
+std::string Helper::toLower(std::string& text) {
+    std::transform(text.begin(), text.end(), text.begin(), ::tolower);
+    return text;
+}
+

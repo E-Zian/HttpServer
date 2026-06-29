@@ -5,6 +5,8 @@
 #include <iostream>
 #include <asio.hpp>
 #include <fmt/core.h>
+#include <cctype>
+#include <algorithm>
 
 namespace {
     std::optional<size_t> parseRequestForDelimiter(std::string_view buffer) {
@@ -40,8 +42,8 @@ namespace {
         if (delimiterPosition == std::string::npos) {
             return std::nullopt;
         }
-        return std::make_pair(headerLine.substr(0, delimiterPosition),
-                              Helper::trim(headerLine.substr(delimiterPosition + 1)));
+        std::string headerTitle{ headerLine.substr(0, delimiterPosition) };
+        return std::make_pair(Helper::toLower(headerTitle),Helper::trim(headerLine.substr(delimiterPosition + 1)));
     }
 
     std::optional<std::vector<std::string_view> > parseRequestLine(std::string_view requestLine) {
@@ -155,12 +157,19 @@ asio::awaitable<void> Connection::handleRequest() {
 
 asio::awaitable<void> Connection::processRequest() {
     try {
+        auto self{ shared_from_this() };
+
         constexpr size_t maxHeaderSize{ 8192 };
         constexpr size_t maxBodySize{ 1024 * 1024 };
 
-        size_t currentHeaderSize{ };
 
-        auto self{shared_from_this()};
+        bool keepAlive_{};
+
+        do {
+        parsedRequest_ = {};
+        requestReceived_ = {};
+        size_t currentHeaderSize{ };
+        
         std::array<char, 128> receivingBuffer{};
 
         std::optional<size_t> delimiterPosition{};
@@ -243,9 +252,9 @@ asio::awaitable<void> Connection::processRequest() {
 
 
         // Has Body
-        if (parsedRequest_.header.contains("Content-Length")) {
+        if (parsedRequest_.header.contains("content-length")) {
             size_t contentLength{};
-            const std::string& contentLentString{ parsedRequest_.header["Content-Length"] };
+            const std::string& contentLentString{ parsedRequest_.header["content-length"] };
             const auto [ptr, ec] {std::from_chars(contentLentString.data(), contentLentString.data() + contentLentString.size(), contentLength)};
 
             if (ec != std::errc{} || ptr != contentLentString.data() + contentLentString.size()) {
@@ -287,8 +296,29 @@ asio::awaitable<void> Connection::processRequest() {
 
         }
 
-        Response response{dispatcher_.dispatch(parsedRequest_.route, parsedRequest_)};
+        Response response{ dispatcher_.dispatch(parsedRequest_.route, parsedRequest_) };
+
+        if (response.header.contains("connection")) {
+            std::string& responseConnectionHeaderValue{ response.header["connection"] };
+            Helper::toLower(response.header["connection"]);
+            keepAlive_ = responseConnectionHeaderValue != "close";
+
+        }
+        else {
+            response.header["connection"] = "keep-alive";
+            keepAlive_ = true;
+        }
+
+        if (keepAlive_) {
+            Helper::displayMessage("Connection id {} kept alive", connectionId_);
+        }
+
         co_await writeResponse(response);
+
+
+        } while (keepAlive_);
+
+        co_return;
 
     } catch (std::exception &e) {
         Helper::displayError("{}", e.what());
