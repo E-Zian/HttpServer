@@ -1,4 +1,4 @@
-#pragma
+#pragma once
 #ifndef POKEMONREPO_H
 #define POKEMONREPO_H
 

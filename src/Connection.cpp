@@ -16,7 +16,7 @@ namespace {
         }
 
         return delimiterPosition;
-    };
+    }
 
     std::string_view getHeaderLine(std::string_view header, size_t &startingPosition) {
         const auto delimiter{"\r\n"};
@@ -137,7 +137,7 @@ asio::awaitable<void> Connection::handleRequest() {
     try {
 
         auto result = co_await(
-            startRead()
+            processRequest()
             || timeOutTimer.async_wait(asio::use_awaitable)
             );
 
@@ -153,7 +153,7 @@ asio::awaitable<void> Connection::handleRequest() {
 
 }
 
-asio::awaitable<void> Connection::startRead() {
+asio::awaitable<void> Connection::processRequest() {
     try {
         constexpr size_t maxHeaderSize{ 8192 };
         constexpr size_t maxBodySize{ 1024 * 1024 };
@@ -264,8 +264,8 @@ asio::awaitable<void> Connection::startRead() {
 
             std::vector<char> receivingBodyBuffer(contentLength);
 
-            // 4 represents the double carriage return and new line
-            while (requestReceived_.size()  < contentLength + rawHeader.size() + 4) {
+            constexpr size_t HEADER_DELIMITER_SIZE = 4;
+            while (requestReceived_.size()  < contentLength + rawHeader.size() + HEADER_DELIMITER_SIZE) {
                 size_t len{
                     co_await socket_.async_read_some(asio::buffer(receivingBodyBuffer),
                                                      asio::use_awaitable)

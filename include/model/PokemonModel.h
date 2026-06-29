@@ -1,4 +1,4 @@
-#pragma
+#pragma once
 #ifndef POKEMONMODEL_H
 #define POKEMONMODEL_H
 

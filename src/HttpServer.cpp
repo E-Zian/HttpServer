@@ -26,7 +26,6 @@ asio::awaitable<void> HttpServer::serverListen() {
             asio::ip::tcp::socket socket{co_await acceptor_.async_accept(asio::use_awaitable)};
 
             const Connection::pointer connection{Connection::create( std::move(socket), ++HttpServer::totalConnections_,dispatcher_)};
-            // connectionList_.push_back(connection);
 
             Helper::displayMessage("Connection ID : {} Connected", HttpServer::totalConnections_);
 
@@ -40,5 +39,4 @@ asio::awaitable<void> HttpServer::serverListen() {
 
 HttpServer::~HttpServer() {
     Helper::displayMessage("Server on port ({}) closed",port_);
-    // connectionList_.clear();
 }

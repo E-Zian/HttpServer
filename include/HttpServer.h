@@ -6,7 +6,6 @@
 #include "Router.h"
 #include "Connection.h"
 #include <asio.hpp>
-#include <vector>
 
 class HttpServer {
 public:
@@ -22,7 +21,6 @@ public:
 private:
 	asio::io_context& io_;
 	tcp::acceptor acceptor_;
-	// std::vector <std::weak_ptr<Connection>> connectionList_;
 	static int totalConnections_;
 	const IDispatcher& dispatcher_;
 	int port_;
