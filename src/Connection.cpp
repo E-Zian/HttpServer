@@ -7,7 +7,7 @@
 #include <fmt/core.h>
 
 namespace {
-    std::optional<size_t> parseRequestForHeader(std::string_view buffer) {
+    std::optional<size_t> parseRequestForDelimiter(std::string_view buffer) {
         const std::string delimiter{"\r\n\r\n"};
         const size_t delimiterPosition{buffer.find(delimiter)};
 
@@ -132,12 +132,11 @@ asio::awaitable<void> Connection::startRead() {
 
             requestReceived_.insert(requestReceived_.end(), receivingBuffer.begin(), receivingBuffer.begin() + len);
 
-            delimiterPosition = parseRequestForHeader(
+            delimiterPosition = parseRequestForDelimiter(
                 std::string_view(requestReceived_.data(), requestReceived_.size()));
         }
 
         // Display Header
-
         // Used to remove warning of std::optional delimiterPosition
         if (!delimiterPosition) {
             co_return;
@@ -188,8 +187,7 @@ asio::awaitable<void> Connection::startRead() {
 
                 co_await writeResponse(
                     ResponseFactory::badRequest("Request Failed: Malformed header line received on {}", headerLine));
-
-                break;
+                co_return;
             }
             parsedRequest_.header[headerPair.value().first] = headerPair.value().second;
         }
@@ -197,11 +195,27 @@ asio::awaitable<void> Connection::startRead() {
 
         // Has Body
         if (parsedRequest_.header.contains("Content-Length")) {
-            const int contentLength{std::stoi(parsedRequest_.header["Content-Length"])};
+            int contentLength{};
+            const std::string& contentLentString{ parsedRequest_.header["Content-Length"] };
+            const auto [ptr, ec] {std::from_chars(contentLentString.data(), contentLentString.data() + contentLentString.size(), contentLength)};
+
+            if (ec != std::errc{} || ptr != contentLentString.data() + contentLentString.size()) {
+                co_await writeResponse(ResponseFactory::badRequest("Invalid Content-Length: {}", contentLentString));
+                co_return;
+            }
+
+            if (contentLength < 0) {
+                Helper::displayMessage("Content Length Received from Connection Id ({}) was invalid, value received : {}", connectionId_, contentLength);
+
+                co_await writeResponse(ResponseFactory::badRequest("Content Length of {} is not accepted",contentLength));
+
+                co_return;
+            }
+
             std::vector<char> receivingBodyBuffer(contentLength);
 
             // 4 represents the double carriage return and new line
-            while (requestReceived_.size() - rawHeader.size() - 4 < contentLength) {
+            while (requestReceived_.size()  < contentLength + rawHeader.size() + 4) {
                 size_t len{
                     co_await socket_.async_read_some(asio::buffer(receivingBodyBuffer),
                                                      asio::use_awaitable)
@@ -225,8 +239,10 @@ asio::awaitable<void> Connection::startRead() {
 
         Response response{dispatcher_.dispatch(parsedRequest_.route, parsedRequest_)};
         co_await writeResponse(response);
+
     } catch (std::exception &e) {
         Helper::displayError("{}", e.what());
+
     }
 }
 
