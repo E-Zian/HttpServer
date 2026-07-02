@@ -59,14 +59,14 @@ namespace {
 
 }
 
-Connection::Connection(tcp::socket &&connectionSocket, const int connectionId, const IDispatcher &dispatcher)
+Connection::Connection(tcp::socket &&connectionSocket, const size_t connectionId, const IDispatcher &dispatcher)
     : socket_{std::move(connectionSocket)},
       connectionId_{connectionId},
       totalRequests_{},
       dispatcher_(dispatcher) {
 }
 
-Connection::pointer Connection::create(tcp::socket &&connectionSocket, const int connectionId,
+Connection::pointer Connection::create(tcp::socket &&connectionSocket, const size_t connectionId,
                                        const IDispatcher &dispatcher) {
     return pointer(new Connection(std::move(connectionSocket), connectionId, dispatcher));
 }
@@ -184,8 +184,7 @@ asio::awaitable<bool> Connection::processRequest() {
                 co_return false;
             }
 
-            std::vector<char> receivingBodyBuffer(contentLength);
-
+            std::array<char, 128> receivingBodyBuffer{};
             constexpr size_t HEADER_DELIMITER_SIZE = 4;
             while (requestReceived.size()  < contentLength + rawHeader.size() + HEADER_DELIMITER_SIZE) {
                 size_t len{

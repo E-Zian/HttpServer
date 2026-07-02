@@ -17,7 +17,7 @@ public:
 	using tcp = asio::ip::tcp;
 	using pointer = std::shared_ptr<Connection>;
 
-	static pointer create(tcp::socket&& connectionSocket,int connectionId,const IDispatcher& dispatcher);
+	static pointer create(tcp::socket&& connectionSocket, const size_t connectionId,const IDispatcher& dispatcher);
 
 	~Connection();
 
@@ -30,7 +30,7 @@ private:
 	size_t totalRequests_;
 	const IDispatcher& dispatcher_;
 
-	Connection(tcp::socket&& connectionSocket, int connectionId,const IDispatcher& dispatcher);
+	Connection(tcp::socket&& connectionSocket, const size_t connectionId,const IDispatcher& dispatcher);
 
 	asio::awaitable<void> writeResponse(const Response& response);
 
