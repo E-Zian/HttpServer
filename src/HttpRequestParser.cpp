@@ -73,6 +73,8 @@ ParseResultObject HttpRequestParser::parseHeader(std::string_view rawHeader) {
 		parseResult.httpStatus = HttpStatus::BAD_REQUEST;
 		parseResult.errorMessage = "Malformed request line received on " + std::string(requestLine);
 		parseResult.result = false;
+
+		return parseResult;
 	}
 		
 	auto methodIt{ methodMap.find(requestLineComponents.value()[0]) };
