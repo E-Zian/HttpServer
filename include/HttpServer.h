@@ -21,7 +21,7 @@ public:
 private:
 	asio::io_context& io_;
 	tcp::acceptor acceptor_;
-	static int totalConnections_;
+	size_t totalConnections_;
 	const IDispatcher& dispatcher_;
 	int port_;
 

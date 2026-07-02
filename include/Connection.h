@@ -8,6 +8,10 @@
 #include <asio.hpp>
 #include <memory>
 
+namespace Constants {
+	inline constexpr size_t MAX_REQUEST_PER_CONNECTION{ 100 };
+}
+
 class Connection :public std::enable_shared_from_this<Connection> {
 public:
 	using tcp = asio::ip::tcp;
@@ -22,7 +26,8 @@ public:
 
 private:
 	tcp::socket socket_;
-	int connectionId_;
+	size_t connectionId_;
+	size_t totalRequests_;
 	const IDispatcher& dispatcher_;
 
 	Connection(tcp::socket&& connectionSocket, int connectionId,const IDispatcher& dispatcher);

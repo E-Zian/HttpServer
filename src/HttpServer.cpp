@@ -4,11 +4,11 @@
 #include <asio.hpp>
 #include <iostream>
 
-int HttpServer::totalConnections_{};
 
 HttpServer::HttpServer(asio::io_context &io, const int port, const IDispatcher& dispatcher)
     : io_{io},
       acceptor_{io, tcp::endpoint(tcp::v4(), port)},
+      totalConnections_{},
       dispatcher_{dispatcher},
       port_{port}
  {

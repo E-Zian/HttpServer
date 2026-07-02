@@ -62,6 +62,7 @@ namespace {
 Connection::Connection(tcp::socket &&connectionSocket, const int connectionId, const IDispatcher &dispatcher)
     : socket_{std::move(connectionSocket)},
       connectionId_{connectionId},
+      totalRequests_{},
       dispatcher_(dispatcher) {
 }
 
@@ -209,6 +210,13 @@ asio::awaitable<bool> Connection::processRequest() {
         }
 
         Response response{ dispatcher_.dispatch(parseResult.parseRequestObject.route, parseResult.parseRequestObject) };
+
+        ++totalRequests_;
+
+        if (totalRequests_ >= Constants::MAX_REQUEST_PER_CONNECTION) {
+            response.header["connection"] = "close";
+        }
+
 
         if (response.header.contains("connection")) {
             std::string& responseConnectionHeaderValue{ response.header["connection"] };
