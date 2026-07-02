@@ -4,6 +4,7 @@
 
 #include "Interface/IDispatcher.h"
 #include "model/HttpTypes.h"
+#include "HttpRequestParser.h"
 #include <asio.hpp>
 #include <memory>
 
@@ -22,8 +23,6 @@ public:
 private:
 	tcp::socket socket_;
 	int connectionId_;
-	std::string requestReceived_{};
-	ParsedRequestObject parsedRequest_{};
 	const IDispatcher& dispatcher_;
 
 	Connection(tcp::socket&& connectionSocket, int connectionId,const IDispatcher& dispatcher);

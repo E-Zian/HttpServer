@@ -19,51 +19,6 @@ namespace {
         return delimiterPosition;
     }
 
-    std::string_view getHeaderLine(std::string_view header, size_t &startingPosition) {
-        const auto delimiter{"\r\n"};
-        const size_t delimiterPosition{header.find(delimiter, startingPosition)};
-
-        const size_t oldStartingPosition{startingPosition};
-
-        if (delimiterPosition == std::string::npos) {
-            startingPosition = header.length();
-            return header.substr(oldStartingPosition);
-        }
-
-        startingPosition = delimiterPosition + 2;
-        return header.substr(oldStartingPosition, delimiterPosition - oldStartingPosition);
-    }
-
-    std::optional<std::pair<std::string, std::string> > parseHeaderLine(const std::string &headerLine) {
-        const auto delimiter{":"};
-        const size_t delimiterPosition{headerLine.find(delimiter)};
-
-        if (delimiterPosition == std::string::npos) {
-            return std::nullopt;
-        }
-        std::string headerTitle{ headerLine.substr(0, delimiterPosition) };
-        return std::make_pair(Helper::toLower(headerTitle),Helper::trim(headerLine.substr(delimiterPosition + 1)));
-    }
-
-    std::optional<std::vector<std::string_view> > parseRequestLine(std::string_view requestLine) {
-        std::vector<std::string_view> requestLineComponents{};
-        size_t start{};
-        while (start < requestLine.length()) {
-            size_t end{requestLine.find(' ', start)};
-
-            if (end == std::string::npos) {
-                requestLineComponents.push_back(requestLine.substr(start, requestLine.length() - start));
-                break;
-            } else {
-                requestLineComponents.push_back(requestLine.substr(start, end - start));
-                start = end + 1;
-            }
-        }
-        if (requestLineComponents.size() < 3) {
-            return std::nullopt;
-        }
-        return requestLineComponents;
-    }
 
     std::string statusToStatusLine(const HttpStatus status) {
         const std::string httpVersion{"HTTP/1.1 "};
@@ -102,15 +57,6 @@ namespace {
         return headerLines;
     }
 
-    const std::unordered_map<std::string_view, Method> methodMap = {
-        {"GET", Method::GET},
-        {"POST", Method::POST},
-        {"PUT", Method::PUT},
-        {"DELETE", Method::DEL},
-        {"PATCH", Method::PATCH},
-        {"HEAD", Method::HEAD},
-        {"OPTIONS", Method::OPTIONS},
-    };
 }
 
 Connection::Connection(tcp::socket &&connectionSocket, const int connectionId, const IDispatcher &dispatcher)
@@ -167,10 +113,10 @@ asio::awaitable<bool> Connection::processRequest() {
         constexpr size_t maxHeaderSize{ 8192 };
         constexpr size_t maxBodySize{ 1024 * 1024 };
 
-        bool keepAlive_{};
+        bool keepAlive{};
 
-        parsedRequest_ = {};
-        requestReceived_ = {};
+        std::string requestReceived {};
+
         size_t currentHeaderSize{ };
         
         std::array<char, 128> receivingBuffer{};
@@ -191,10 +137,10 @@ asio::awaitable<bool> Connection::processRequest() {
                 co_return false;
             }
 
-            requestReceived_.insert(requestReceived_.end(), receivingBuffer.begin(), receivingBuffer.begin() + static_cast<long long>(len));
+            requestReceived.insert(requestReceived.end(), receivingBuffer.begin(), receivingBuffer.begin() + static_cast<long long>(len));
 
             delimiterPosition = parseRequestForDelimiter(
-                std::string_view(requestReceived_.data(), requestReceived_.size()));
+                std::string_view(requestReceived.data(), requestReceived.size()));
         }
 
         // Display Header
@@ -203,61 +149,24 @@ asio::awaitable<bool> Connection::processRequest() {
             co_return false;
         }
         Helper::displayMessage("Headers Received from Connection Id ({})\n{}", connectionId_,
-                               std::string_view(requestReceived_.data(), delimiterPosition.value()));
+                               std::string_view(requestReceived.data(), delimiterPosition.value()));
 
-        const auto rawHeader = std::string(requestReceived_.data(), delimiterPosition.value());
+        const auto rawHeader = std::string(requestReceived.data(), delimiterPosition.value());
 
-        size_t startingPosition{};
+        ParseResultObject parseResult{ HttpRequestParser::parseHeader(rawHeader) };
 
-        const auto requestLine{getHeaderLine(rawHeader, startingPosition)};
-
-        auto parsedRequestLineComponents{parseRequestLine(requestLine)};
-
-        if (!parsedRequestLineComponents.has_value()) {
-            Helper::displayError("Error Connection ID ({}) Request Failed: {}", connectionId_,
-                                 "Malformed Request Line Received");
-
-            co_await writeResponse(
-                ResponseFactory::badRequest("Request Failed: Malformed request line received on {}", requestLine));
+        if (!parseResult.result) {
+            Helper::displayError("Connection Id {} Parse Error : {}", connectionId_,parseResult.errorMessage);
+            co_await writeResponse(ResponseFactory::failedResponse(parseResult.httpStatus, "Parse Error : {}", parseResult.errorMessage));
 
             co_return false;
-        };
-
-        auto methodIt{methodMap.find(parsedRequestLineComponents.value()[0])};
-        if (methodIt == methodMap.end()) {
-            
-            Helper::displayError("Error Connection ID ({}) Request Failed: {}", connectionId_,
-                "Unsupported Method");
-
-            co_await writeResponse(
-                ResponseFactory::badRequest("Request Failed: Unsupported Method {}", parsedRequestLineComponents.value()[0]));
-            co_return false;
-        }
-
-        parsedRequest_.method = methodIt->second;
-        parsedRequest_.route = std::string(parsedRequestLineComponents.value()[1]);
-        parsedRequest_.httpVersion = std::string(parsedRequestLineComponents.value()[2]);
-
-        while (startingPosition != rawHeader.length()) {
-            std::string headerLine{getHeaderLine(rawHeader, startingPosition)};
-
-            std::optional<std::pair<std::string, std::string> > headerPair{parseHeaderLine(headerLine)};
-            if (!headerPair.has_value()) {
-                Helper::displayError("Error Connection ID ({}) Request Failed: {}{}", connectionId_,
-                                     "Malformed header line : ", headerLine);
-
-                co_await writeResponse(
-                    ResponseFactory::badRequest("Request Failed: Malformed header line received on {}", headerLine));
-                co_return false;
-            }
-            parsedRequest_.header[headerPair.value().first] = headerPair.value().second;
         }
 
 
         // Has Body
-        if (parsedRequest_.header.contains("content-length")) {
+        if (parseResult.parseRequestObject.header.contains("content-length")) {
             size_t contentLength{};
-            const std::string& contentLentString{ parsedRequest_.header["content-length"] };
+            const std::string& contentLentString{ parseResult.parseRequestObject.header["content-length"] };
             const auto [ptr, ec] {std::from_chars(contentLentString.data(), contentLentString.data() + contentLentString.size(), contentLength)};
 
             if (ec != std::errc{} || ptr != contentLentString.data() + contentLentString.size()) {
@@ -277,42 +186,42 @@ asio::awaitable<bool> Connection::processRequest() {
             std::vector<char> receivingBodyBuffer(contentLength);
 
             constexpr size_t HEADER_DELIMITER_SIZE = 4;
-            while (requestReceived_.size()  < contentLength + rawHeader.size() + HEADER_DELIMITER_SIZE) {
+            while (requestReceived.size()  < contentLength + rawHeader.size() + HEADER_DELIMITER_SIZE) {
                 size_t len{
                     co_await socket_.async_read_some(asio::buffer(receivingBodyBuffer),
                                                      asio::use_awaitable)
                 };
 
 
-                requestReceived_.insert(requestReceived_.end(), receivingBodyBuffer.begin(),
+                requestReceived.insert(requestReceived.end(), receivingBodyBuffer.begin(),
                                         receivingBodyBuffer.begin() + static_cast<long long>(len));
             }
-            Helper::displayMessage("requestReceived_.size()={}, header.size()={}, delimiterPos={}, contentLength={}",
-                                   requestReceived_.size(), rawHeader.size(), delimiterPosition.value(),
+            Helper::displayMessage("requestReceived.size()={}, header.size()={}, delimiterPos={}, contentLength={}",
+                                   requestReceived.size(), rawHeader.size(), delimiterPosition.value(),
                                    contentLength);
 
 
-            parsedRequest_.body = std::string(&requestReceived_[delimiterPosition.value() + static_cast<size_t>(4)],
+            parseResult.parseRequestObject.body = std::string(&requestReceived[delimiterPosition.value() + static_cast<size_t>(HEADER_DELIMITER_SIZE)],
                                              contentLength);
 
-            Helper::displayMessage("Body Received from Connection Id ({})\n{}", connectionId_, parsedRequest_.body);
+            Helper::displayMessage("Body Received from Connection Id ({})\n{}", connectionId_, parseResult.parseRequestObject.body);
 
         }
 
-        Response response{ dispatcher_.dispatch(parsedRequest_.route, parsedRequest_) };
+        Response response{ dispatcher_.dispatch(parseResult.parseRequestObject.route, parseResult.parseRequestObject) };
 
         if (response.header.contains("connection")) {
             std::string& responseConnectionHeaderValue{ response.header["connection"] };
             Helper::toLower(response.header["connection"]);
-            keepAlive_ = responseConnectionHeaderValue != "close";
+            keepAlive = responseConnectionHeaderValue != "close";
 
         }
         else {
             response.header["connection"] = "keep-alive";
-            keepAlive_ = true;
+            keepAlive = true;
         }
 
-        if (keepAlive_) {
+        if (keepAlive) {
             Helper::displayMessage("Connection id {} kept alive", connectionId_);
         }
 
@@ -320,7 +229,7 @@ asio::awaitable<bool> Connection::processRequest() {
 
 
 
-        co_return keepAlive_;
+        co_return keepAlive;
 
     } catch (std::exception &e) {
         Helper::displayError("{}", e.what());
