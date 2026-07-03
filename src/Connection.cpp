@@ -102,7 +102,7 @@ asio::awaitable<void> Connection::handleRequest() {
 
     }
     catch (std::exception& e) {
-        Helper::displayError("error occured in handle request : {}", e.what());
+        Helper::displayError("error occurred in handle request : {}", e.what());
     }
 
 }

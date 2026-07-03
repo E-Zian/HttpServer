@@ -33,9 +33,7 @@ namespace {
 		std::vector<std::string_view> requestLineComponents{};
 		size_t start{};
 		while (start < requestLine.length()) {
-			size_t end{ requestLine.find(' ', start) };
-
-			if (end == std::string::npos) {
+			if (const size_t end{ requestLine.find(' ', start) }; end == std::string::npos) {
 				requestLineComponents.push_back(requestLine.substr(start, requestLine.length() - start));
 				break;
 			}
@@ -65,9 +63,9 @@ ParseResultObject HttpRequestParser::parseHeader(std::string_view rawHeader) {
 	ParseResultObject parseResult{};
 	size_t positionIterator{};
 
-	std::string_view requestLine{ getHeaderLine(rawHeader,positionIterator) };
+	const std::string_view requestLine{ getHeaderLine(rawHeader,positionIterator) };
 
-	std::optional<std::vector<std::string_view>> requestLineComponents{ parseRequestLine(requestLine) };
+	const std::optional<std::vector<std::string_view>> requestLineComponents{ parseRequestLine(requestLine) };
 
 	if (!requestLineComponents.has_value()) {
 		parseResult.httpStatus = HttpStatus::BAD_REQUEST;
@@ -76,8 +74,8 @@ ParseResultObject HttpRequestParser::parseHeader(std::string_view rawHeader) {
 
 		return parseResult;
 	}
-		
-	auto methodIt{ methodMap.find(requestLineComponents.value()[0]) };
+
+	const auto methodIt{ methodMap.find(requestLineComponents.value()[0]) };
 
 	if (methodIt == methodMap.end()) {
 		parseResult.httpStatus = HttpStatus::BAD_REQUEST;
