@@ -29,6 +29,7 @@ private:
 	size_t connectionId_;
 	size_t totalRequests_;
 	const IDispatcher& dispatcher_;
+	const std::string clientIp_;
 
 	Connection(tcp::socket&& connectionSocket, const size_t connectionId,const IDispatcher& dispatcher);
 

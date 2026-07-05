@@ -38,7 +38,9 @@ add_executable(HttpServer
         src/controller/HomeController.cpp
         include/controller/HomeController.h
         src/AssetManager.cpp
-        include/AssetManager.h "src/HttpRequestParser.cpp" "include/HttpRequestParser.h")
+        include/AssetManager.h "src/HttpRequestParser.cpp" "include/HttpRequestParser.h"
+        src/RateLimiter.cpp
+        include/RateLimiter.h)
 
 # Define Windows version for ASIO
 target_compile_definitions(HttpServer PRIVATE _WIN32_WINNT=0x0A00)
