@@ -1,8 +1,10 @@
 #include "RateLimiter.h"
+#include <algorithm>
+#include <chrono>
 
-RateLimiter::RateLimiter(const double bucketTokenCapacity, const double tokenRefillPerMin) : bucketTokenCapacity_{
+RateLimiter::RateLimiter(const double bucketTokenCapacity, const double tokenRefillPerSec) : bucketTokenCapacity_{
         bucketTokenCapacity
-    }, tokenRefillPerMin_(tokenRefillPerMin)
+    }, tokenRefillPerSec_(tokenRefillPerSec)
 {
 }
 
@@ -11,4 +13,24 @@ bool RateLimiter::checkClientLimit(const std::string &clientIp) {
         return false;
     }
 
+    auto clientIt{ clientBucket_.find(clientIp) };
+    if (clientIt == clientBucket_.end()) {
+        clientBucket_[clientIp]=Bucket{bucketTokenCapacity_-1,std::chrono::steady_clock::now() };
+        return true;
+    }
+
+    Bucket& clientBucket{ clientIt->second };
+
+    std::chrono::duration<double> elapsedTime{ std::chrono::steady_clock::now() - clientBucket.lastRequest };
+    clientBucket.lastRequest = std::chrono::steady_clock::now();
+
+    clientBucket.tokens += elapsedTime.count() * tokenRefillPerSec_;
+    clientBucket.tokens = std::min(clientBucket.tokens, bucketTokenCapacity_);
+
+    if (clientBucket.tokens < 1.0) {
+        return false;
+    }
+
+    clientBucket.tokens -= 1.0;
+    return true;
 }

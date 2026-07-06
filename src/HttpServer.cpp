@@ -5,12 +5,13 @@
 #include <iostream>
 
 
-HttpServer::HttpServer(asio::io_context &io, const int port, const IDispatcher& dispatcher)
+HttpServer::HttpServer(asio::io_context &io, const int port, const IDispatcher& dispatcher, RateLimiter& rateLimiter)
     : io_{io},
       acceptor_{io, tcp::endpoint(tcp::v4(), port)},
       totalConnections_{},
       dispatcher_{dispatcher},
-      port_{port}
+      port_{port},
+      rateLimiter_{ rateLimiter }
  {
     asio::co_spawn(io, serverListen(), asio::detached);
 
@@ -25,7 +26,7 @@ asio::awaitable<void> HttpServer::serverListen() {
 
             asio::ip::tcp::socket socket{co_await acceptor_.async_accept(asio::use_awaitable)};
 
-            const Connection::pointer connection{Connection::create( std::move(socket), ++HttpServer::totalConnections_,dispatcher_)};
+            const Connection::pointer connection{Connection::create( std::move(socket), ++HttpServer::totalConnections_,dispatcher_,rateLimiter_)};
 
             Helper::displayMessage("Connection ID : {} Connected", HttpServer::totalConnections_);
 

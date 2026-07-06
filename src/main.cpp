@@ -3,6 +3,7 @@
 #include "Router.h"
 #include "repository/PokemonRepo.h"
 #include "controller/PokemonController.h"
+#include "RateLimiter.h"
 #include "AssetManager.h"
 #include "controller/UserController.h"
 #include "repository/UserRepo.h"
@@ -30,7 +31,12 @@ int main() {
     AssetManager& assetManager {AssetManager::getInstance()};
     // assetManager.loadAsset("assets/images/quagsire.ico","image/x-icon",);
 
+    double maxbucketTokenCapacity{ 100.0 };
+    double tokenRefillPerSec{ 1.0 };
+    RateLimiter rateLimiter(maxbucketTokenCapacity, tokenRefillPerSec);
+
     const Router router{};
+
     // Repo Setup
     const PokemonRepo pokemonRepo{db.get()};
     const UserRepo userRepo{db.get()};
@@ -39,7 +45,8 @@ int main() {
     PokemonController pokemonController{router, pokemonRepo};
     UserController userController{router, userRepo};
 
-    HttpServer server(io,6767,router);
+    int portToListen{ 6767 };
+    HttpServer server(io, portToListen,router,rateLimiter);
 
     io.run();
     return 0;

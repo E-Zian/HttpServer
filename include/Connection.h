@@ -2,6 +2,7 @@
 #ifndef CONNECTION_H
 #define CONNECTION_H
 
+#include "RateLimiter.h"
 #include "Interface/IDispatcher.h"
 #include "model/HttpTypes.h"
 #include "HttpRequestParser.h"
@@ -17,7 +18,7 @@ public:
 	using tcp = asio::ip::tcp;
 	using pointer = std::shared_ptr<Connection>;
 
-	static pointer create(tcp::socket&& connectionSocket, const size_t connectionId,const IDispatcher& dispatcher);
+	static pointer create(tcp::socket&& connectionSocket, const size_t connectionId,const IDispatcher& dispatcher, RateLimiter& rateLimiter);
 
 	~Connection();
 
@@ -30,8 +31,9 @@ private:
 	size_t totalRequests_;
 	const IDispatcher& dispatcher_;
 	const std::string clientIp_;
+	RateLimiter& rateLimiter_;
 
-	Connection(tcp::socket&& connectionSocket, const size_t connectionId,const IDispatcher& dispatcher);
+	Connection(tcp::socket&& connectionSocket, const size_t connectionId,const IDispatcher& dispatcher, RateLimiter& rateLimiter);
 
 	asio::awaitable<void> writeResponse(const Response& response);
 

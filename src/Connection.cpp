@@ -39,6 +39,9 @@ namespace {
             case HttpStatus::CONTENT_TOO_LARGE:
                 return httpVersion + "413 Content Too Large";
 
+            case HttpStatus::TOO_MANY_REQUEST:
+                return httpVersion + "429 Too Many Request";
+
             case HttpStatus::REQUEST_HEADERS_TOO_LARGE:
                 return httpVersion + "431 Request Headers Too Large";
 
@@ -58,17 +61,20 @@ namespace {
     }
 }
 
-Connection::Connection(tcp::socket &&connectionSocket, const size_t connectionId, const IDispatcher &dispatcher)
+Connection::Connection(tcp::socket &&connectionSocket, const size_t connectionId, const IDispatcher &dispatcher, RateLimiter& rateLimiter)
     : socket_{std::move(connectionSocket)},
       connectionId_{connectionId},
       totalRequests_{},
       dispatcher_(dispatcher),
-      clientIp_{socket_.remote_endpoint().address().to_string()} {
+      clientIp_{socket_.remote_endpoint().address().to_string()},
+      rateLimiter_{ rateLimiter }
+{
+    
 }
 
 Connection::pointer Connection::create(tcp::socket &&connectionSocket, const size_t connectionId,
-                                       const IDispatcher &dispatcher) {
-    return pointer(new Connection(std::move(connectionSocket), connectionId, dispatcher));
+                                       const IDispatcher &dispatcher, RateLimiter& rateLimiter) {
+    return pointer(new Connection(std::move(connectionSocket), connectionId, dispatcher, rateLimiter));
 }
 
 Connection::~Connection() {
@@ -84,6 +90,10 @@ asio::awaitable<void> Connection::handleRequest() {
     try {
         bool keepAlive{};
         do {
+            if (!rateLimiter_.checkClientLimit(clientIp_)) {
+                co_await writeResponse(ResponseFactory::failedResponse(HttpStatus::TOO_MANY_REQUEST, "Too many request sent"));
+                co_return ;
+            }
             timeOutTimer.expires_after(std::chrono::seconds(10));
             auto result = co_await(
                 processRequest()
@@ -106,6 +116,8 @@ asio::awaitable<void> Connection::handleRequest() {
 asio::awaitable<bool> Connection::processRequest() {
     try {
         auto self{shared_from_this()};
+
+
 
         constexpr size_t maxHeaderSize{8192};
         constexpr size_t maxBodySize{1024 * 1024};
@@ -143,11 +155,10 @@ asio::awaitable<bool> Connection::processRequest() {
                 std::string_view(requestReceived.data(), requestReceived.size()));
         }
 
-        // Display Header
-        // Used to remove warning of std::optional delimiterPosition
         if (!delimiterPosition) {
             co_return false;
         }
+
         Helper::displayMessage("Headers Received from Connection Id ({})\n{}", connectionId_,
                                std::string_view(requestReceived.data(), delimiterPosition.value()));
 

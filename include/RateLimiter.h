@@ -12,13 +12,14 @@ struct Bucket{
 };
 class RateLimiter {
     public:
-        RateLimiter(double bucketTokenCapacity,double tokenRefillPerMin);
-        std::optional<bool> checkClientLimit(const std::string& clientIp);
+        RateLimiter(double bucketTokenCapacity,double tokenRefillPerSec);
+
+        bool checkClientLimit(const std::string& clientIp);
 
     private:
         double bucketTokenCapacity_{} ;
-        double tokenRefillPerMin_{} ;
-        std::unordered_map<std::string,Bucket> clientBucket{};
+        double tokenRefillPerSec_{} ;
+        std::unordered_map<std::string,Bucket> clientBucket_{};
 };
 
 #endif //HTTPSERVER_RATELIMITER_H
