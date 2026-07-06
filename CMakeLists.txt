@@ -45,10 +45,12 @@ add_executable(HttpServer
 # Define Windows version for ASIO
 target_compile_definitions(HttpServer PRIVATE _WIN32_WINNT=0x0A00)
 
-if (CMAKE_VERSION VERSION_GREATER 3.12)
-  set_property(TARGET HttpServer PROPERTY CXX_STANDARD 20)
-endif()
-
+target_compile_features(HttpServer PRIVATE cxx_std_20)   # cleanest — sets AND requires C++20
+set_target_properties(HttpServer PROPERTIES
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+    CXX_EXTENSIONS OFF
+)
 
 find_package(fmt CONFIG REQUIRED)
 target_link_libraries(HttpServer PRIVATE fmt::fmt)

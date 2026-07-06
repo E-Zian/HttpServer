@@ -1,5 +1,4 @@
 #include "RateLimiter.h"
-#include <algorithm>
 #include <chrono>
 
 RateLimiter::RateLimiter(const double bucketTokenCapacity, const double tokenRefillPerSec) : bucketTokenCapacity_{
@@ -33,4 +32,8 @@ bool RateLimiter::checkClientLimit(const std::string &clientIp) {
 
     clientBucket.tokens -= 1.0;
     return true;
+}
+
+void RateLimiter::sweep(std::chrono::steady_clock::time_point& now) {
+    std::erase_if
 }

@@ -117,8 +117,6 @@ asio::awaitable<bool> Connection::processRequest() {
     try {
         auto self{shared_from_this()};
 
-
-
         constexpr size_t maxHeaderSize{8192};
         constexpr size_t maxBodySize{1024 * 1024};
 
