@@ -269,7 +269,7 @@ asio::awaitable<bool> Connection::processRequest() {
 asio::awaitable<void> Connection::writeResponse(Response response) {
     auto self{shared_from_this()};
 
-    response.addHeader("x-token-limit", std::to_string(static_cast<int>(checkLimitResult_.tokenLimit)));
+    response.addHeader("x-token-capacity", std::to_string(static_cast<int>(checkLimitResult_.tokenCapacity)));
     response.addHeader("x-tokens-left", std::to_string(static_cast<int>(checkLimitResult_.tokensLeft)));
 
     const std::string statusLine{statusToStatusLine(response.status)};

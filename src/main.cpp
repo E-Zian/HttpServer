@@ -31,8 +31,8 @@ int main() {
     AssetManager& assetManager {AssetManager::getInstance()};
     // assetManager.loadAsset("assets/images/quagsire.ico","image/x-icon",);
 
-    double maxbucketTokenCapacity{ 5.0 };
-    double tokenRefillPerSec{ 0.1 };
+    double maxbucketTokenCapacity{ 100.0 };
+    double tokenRefillPerSec{ 1.0 };
     RateLimiter rateLimiter(maxbucketTokenCapacity, tokenRefillPerSec);
 
     const Router router{};

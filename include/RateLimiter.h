@@ -20,7 +20,7 @@ struct Bucket{
 struct CheckLimitResult {
     bool allow;
     double tokensLeft;
-    double tokenLimit;
+    double tokenCapacity;
 };
 
 class RateLimiter {
