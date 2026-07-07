@@ -24,7 +24,7 @@ void Router::addRoute(const Method method, const std::string& path, const std::f
 	Route* currentRoute = root_.get();
 
 	for (const auto& pathSegment : pathSegments) {
-		if (pathSegment[0] == ':') {
+		if (pathSegment.size() != 0 && pathSegment[0] == ':') {
 			if (currentRoute->parameterChild && currentRoute->parameterChild->segmentName != pathSegment) {
 				throw std::invalid_argument("Param conflict at: " + pathSegment + " in added route : " + path);
 			}

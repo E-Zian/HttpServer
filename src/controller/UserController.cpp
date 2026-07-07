@@ -5,23 +5,23 @@
 #include "model/PokemonModel.h"
 
 UserController::UserController(const Router &router, const UserRepo &repo) : ControllerBase(router), repo_{repo} {
-    router_.addRoute(Method::GET, "/api/user/getAll", [this](const ParsedRequestObject &request) {
+    router_.addRoute(Method::GET, "/api/user", [this](const ParsedRequestObject &request) {
         return this->getAllUsers(request);
     });
 
-    router_.addRoute(Method::POST, "/api/user/create", [this](const ParsedRequestObject &request) {
+    router_.addRoute(Method::POST, "/api/user", [this](const ParsedRequestObject &request) {
         return this->createUser(request);
     });
 
-    router_.addRoute(Method::GET, "/api/user/get/:id", [this](const ParsedRequestObject &request) {
+    router_.addRoute(Method::GET, "/api/user/:id", [this](const ParsedRequestObject &request) {
         return this->getUser(request);
     });
 
-    router_.addRoute(Method::GET, "/api/user/update/:id", [this](const ParsedRequestObject &request) {
+    router_.addRoute(Method::PUT, "/api/user/:id", [this](const ParsedRequestObject &request) {
         return this->updateUser(request);
     });
 
-    router_.addRoute(Method::GET, "/api/user/delete/:id", [this](const ParsedRequestObject &request) {
+    router_.addRoute(Method::DEL, "/api/user/:id", [this](const ParsedRequestObject &request) {
         return this->deleteUser(request);
     });
 }

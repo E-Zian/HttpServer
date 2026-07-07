@@ -6,23 +6,23 @@
 
 PokemonController::PokemonController(const Router &router, const PokemonRepo &repo) : ControllerBase(router),
     repo_(repo) {
-    router_.addRoute(Method::GET, "/api/pokemon/getAll", [this](const ParsedRequestObject &req) {
+    router_.addRoute(Method::GET, "/api/pokemon", [this](const ParsedRequestObject &req) {
         return this->getAllPokemon(req);
     });
 
-    router_.addRoute(Method::POST, "/api/pokemon/create", [this](const ParsedRequestObject &req) {
+    router_.addRoute(Method::POST, "/api/pokemon", [this](const ParsedRequestObject &req) {
         return this->createPokemon(req);
     });
 
-    router_.addRoute(Method::GET, "/api/pokemon/get/:id", [this](const ParsedRequestObject &req) {
+    router_.addRoute(Method::GET, "/api/pokemon/:id", [this](const ParsedRequestObject &req) {
         return this->getPokemon(req);
     });
 
-    router_.addRoute(Method::POST, "/api/pokemon/update/:id", [this](const ParsedRequestObject &req) {
+    router_.addRoute(Method::PUT, "/api/pokemon/:id", [this](const ParsedRequestObject &req) {
         return this->updatePokemon(req);
     });
 
-    router_.addRoute(Method::DEL, "/api/pokemon/delete/:id", [this](const ParsedRequestObject &req) {
+    router_.addRoute(Method::DEL, "/api/pokemon/:id", [this](const ParsedRequestObject &req) {
     return this->deletePokemon(req);
 });
 }

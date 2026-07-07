@@ -49,7 +49,7 @@ namespace UserModel {
 	namespace Error {
 		class UserAlreadyExistsException : public std::runtime_error {
 			public:
-			explicit UserAlreadyExistsException(const std::string& name) : runtime_error("Pokemon '" + name + "' already exists") {};
+			explicit UserAlreadyExistsException(const std::string& name) : runtime_error("User '" + name + "' already exists") {};
 
 		};
 		class UserNotFoundException : public std::runtime_error {
