@@ -90,10 +90,7 @@ asio::awaitable<void> Connection::handleRequest() {
     try {
         bool keepAlive{};
         do {
-            if (!rateLimiter_.checkClientLimit(clientIp_)) {
-                co_await writeResponse(ResponseFactory::failedResponse(HttpStatus::TOO_MANY_REQUEST, "Too many request sent"));
-                co_return ;
-            }
+
             timeOutTimer.expires_after(std::chrono::seconds(10));
             auto result = co_await(
                 processRequest()
@@ -116,6 +113,12 @@ asio::awaitable<void> Connection::handleRequest() {
 asio::awaitable<bool> Connection::processRequest() {
     try {
         auto self{shared_from_this()};
+
+        CheckLimitResult checkLimitResult{ rateLimiter_.checkClientLimit(clientIp_) };
+        if (!checkLimitResult.allow) {
+            co_await writeResponse(ResponseFactory::failedResponse(HttpStatus::TOO_MANY_REQUEST, "Too many request sent"));
+            co_return false;
+        }
 
         constexpr size_t maxHeaderSize{8192};
         constexpr size_t maxBodySize{1024 * 1024};
@@ -244,6 +247,9 @@ asio::awaitable<bool> Connection::processRequest() {
         if (keepAlive) {
             Helper::displayMessage("Connection id {} kept alive", connectionId_);
         }
+
+        response.header["x-token-limit"] = std::to_string(static_cast<int>(checkLimitResult.tokenLimit)) ;
+        response.header["x-tokens-left"] = std::to_string(static_cast<int>(checkLimitResult.tokensLeft));
 
         co_await writeResponse(response);
 

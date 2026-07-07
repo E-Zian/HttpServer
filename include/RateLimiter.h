@@ -16,11 +16,18 @@ struct Bucket{
     double tokens{};
     std::chrono::steady_clock::time_point lastRequest;
 };
+
+struct CheckLimitResult {
+    bool allow;
+    double tokensLeft;
+    double tokenLimit;
+};
+
 class RateLimiter {
     public:
         RateLimiter(double bucketTokenCapacity,double tokenRefillPerSec);
 
-        bool checkClientLimit(const std::string& clientIp);
+        CheckLimitResult checkClientLimit(const std::string& clientIp);
 
     private:
         double bucketTokenCapacity_{} ;
