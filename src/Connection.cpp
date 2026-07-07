@@ -99,7 +99,6 @@ asio::awaitable<void> Connection::handleRequest() {
 
             if (result.index() == 1) {
                 Helper::displayError("Connection ({}) timed out", connectionId_);
-
                 co_await writeResponse(ResponseFactory::requestTimeout("Request timed out"));
                 co_return;
             }
@@ -113,12 +112,6 @@ asio::awaitable<void> Connection::handleRequest() {
 asio::awaitable<bool> Connection::processRequest() {
     try {
         auto self{shared_from_this()};
-
-        CheckLimitResult checkLimitResult{ rateLimiter_.checkClientLimit(clientIp_) };
-        if (!checkLimitResult.allow) {
-            co_await writeResponse(ResponseFactory::failedResponse(HttpStatus::TOO_MANY_REQUEST, "Too many request sent"));
-            co_return false;
-        }
 
         constexpr size_t maxHeaderSize{8192};
         constexpr size_t maxBodySize{1024 * 1024};
@@ -141,11 +134,12 @@ asio::awaitable<bool> Connection::processRequest() {
             currentHeaderSize += len;
 
             if (currentHeaderSize > maxHeaderSize) {
-                Helper::displayMessage(
+                checkLimitResult_ = rateLimiter_.checkClientLimit(clientIp_);
+                Helper::displayError(
                     "Header Length Received from Connection Id ({}) was too large, value received : {}", connectionId_,
                     currentHeaderSize);
 
-                co_await writeResponse(ResponseFactory::headerTooLarge("Header sent is too large"));
+                co_await writeResponse(ResponseFactory::failedResponse(HttpStatus::REQUEST_HEADERS_TOO_LARGE, "Header sent is too large"));
                 co_return false;
             }
 
@@ -156,7 +150,20 @@ asio::awaitable<bool> Connection::processRequest() {
                 std::string_view(requestReceived.data(), requestReceived.size()));
         }
 
+
+        checkLimitResult_ = rateLimiter_.checkClientLimit(clientIp_) ;
+        if (!checkLimitResult_.allow) {
+
+            Helper::displayError("Too many request sent from ip {}", clientIp_);
+
+            co_await writeResponse(ResponseFactory::failedResponse(HttpStatus::TOO_MANY_REQUEST, "Too many request sent"));
+            co_return false;
+        }
+
         if (!delimiterPosition) {
+
+            co_await writeResponse(ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "Delimiter not found"));
+
             co_return false;
         }
 
@@ -169,8 +176,8 @@ asio::awaitable<bool> Connection::processRequest() {
 
         if (!parseResult.result) {
             Helper::displayError("Connection Id {} Parse Error : {}", connectionId_, parseResult.errorMessage);
-            co_await writeResponse(
-                ResponseFactory::failedResponse(parseResult.httpStatus, "Parse Error : {}", parseResult.errorMessage));
+
+            co_await writeResponse(ResponseFactory::failedResponse(parseResult.httpStatus, "Parse Error : {}", parseResult.errorMessage));
 
             co_return false;
         }
@@ -186,17 +193,18 @@ asio::awaitable<bool> Connection::processRequest() {
             };
 
             if (ec != std::errc{} || ptr != contentLentString.data() + contentLentString.size()) {
-                co_await writeResponse(ResponseFactory::badRequest("Invalid Content-Length: {}", contentLentString));
+
+                co_await writeResponse(ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "Invalid Content-Length: {}", contentLentString));
                 co_return false;
             }
 
 
             if (contentLength > maxBodySize) {
-                Helper::displayMessage(
+                Helper::displayError(
                     "Content Length Received from Connection Id ({}) was too large, value received : {}", connectionId_,
                     contentLength);
 
-                co_await writeResponse(ResponseFactory::contentTooLarge("Content Length too large"));
+                co_await writeResponse(ResponseFactory::failedResponse(HttpStatus::CONTENT_TOO_LARGE, "Content Length too large"));
 
                 co_return false;
             }
@@ -248,9 +256,6 @@ asio::awaitable<bool> Connection::processRequest() {
             Helper::displayMessage("Connection id {} kept alive", connectionId_);
         }
 
-        response.header["x-token-limit"] = std::to_string(static_cast<int>(checkLimitResult.tokenLimit)) ;
-        response.header["x-tokens-left"] = std::to_string(static_cast<int>(checkLimitResult.tokensLeft));
-
         co_await writeResponse(response);
 
 
@@ -261,8 +266,11 @@ asio::awaitable<bool> Connection::processRequest() {
     }
 }
 
-asio::awaitable<void> Connection::writeResponse(const Response &response) {
+asio::awaitable<void> Connection::writeResponse(Response response) {
     auto self{shared_from_this()};
+
+    response.addHeader("x-token-limit", std::to_string(static_cast<int>(checkLimitResult_.tokenLimit)));
+    response.addHeader("x-tokens-left", std::to_string(static_cast<int>(checkLimitResult_.tokensLeft)));
 
     const std::string statusLine{statusToStatusLine(response.status)};
     const std::string headerLines{headerToString(response.header)};

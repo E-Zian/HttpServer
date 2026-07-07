@@ -2,6 +2,7 @@
 #ifndef RESPONSEFACTORY_H
 #define RESPONSEFACTORY_H
 
+#include "Helper.h"
 #include "model/HttpTypes.h"
 #include <fmt/core.h>
 #include <nlohmann/json.hpp>
@@ -117,13 +118,14 @@ namespace ResponseFactory {
 
 		nlohmann::json json;
 		json["errorMessage"] = message;
-
+		
 		Response response{ status,{},json.dump() };
 
 		response.header["content-type"] = "application/json";
 		response.header["connection"] = "close";
 		response.header["content-length"] = std::to_string(response.body.size());
 
+		//Helper::displayError(message);
 		return response;
 	}
 

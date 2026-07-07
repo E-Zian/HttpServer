@@ -32,10 +32,11 @@ private:
 	const IDispatcher& dispatcher_;
 	const std::string clientIp_;
 	RateLimiter& rateLimiter_;
+	CheckLimitResult checkLimitResult_{};
 
 	Connection(tcp::socket&& connectionSocket, const size_t connectionId,const IDispatcher& dispatcher, RateLimiter& rateLimiter);
 
-	asio::awaitable<void> writeResponse(const Response& response);
+	asio::awaitable<void> writeResponse(Response response);
 
 	asio::awaitable<bool> processRequest();
 

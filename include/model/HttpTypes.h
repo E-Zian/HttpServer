@@ -43,6 +43,10 @@ struct Response {
     HttpStatus status;
     std::unordered_map<std::string, std::string> header{};
     std::string body;
+
+    void addHeader(std::string key, std::string value) {
+        header[std::move(key)] = std::move(value);
+    }
 };
 
 
