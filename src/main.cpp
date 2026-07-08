@@ -1,5 +1,5 @@
 #include "HttpServer.h"
-#include "controller/testingController.h"
+#include "controller/TestingController.h"
 #include "Router.h"
 #include "repository/PokemonRepo.h"
 #include "controller/PokemonController.h"
