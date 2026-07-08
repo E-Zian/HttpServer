@@ -43,8 +43,10 @@ add_executable(HttpServer
         src/RateLimiter.cpp
         include/RateLimiter.h "include/Interface/IPokemonRepo.h" "include/Interface/IUserRepo.h")
 
-# Define Windows version for ASIO
-target_compile_definitions(HttpServer PRIVATE _WIN32_WINNT=0x0A00)
+if(WIN32)
+    # Define Windows version for ASIO
+    target_compile_definitions(HttpServer PRIVATE _WIN32_WINNT=0x0A00)
+endif()
 
 target_compile_features(HttpServer PRIVATE cxx_std_20)   # cleanest — sets AND requires C++20
 set_target_properties(HttpServer PROPERTIES
