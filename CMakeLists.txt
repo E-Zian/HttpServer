@@ -30,7 +30,7 @@ add_executable(HttpServer
         "include/controller/ControllerBase.h"
         "include/Interface/IDispatcher.h"
         "include/Interface/IRouteRegistrar.h"
-        "include/database/Database.h"
+        "include/database/database.h"
         "src/database/database.cpp"
         "src/repository/UserRepo.cpp"
         "src/repository/PokemonRepo.cpp"
