@@ -28,7 +28,7 @@ add_executable(HttpServer
         "include/controller/TestingController.h"
         "src/controller/ControllerBase.cpp"
         "include/controller/ControllerBase.h"
-        "include/Interface/Idispatcher.h"
+        "include/Interface/IDispatcher.h"
         "include/Interface/IRouteRegistrar.h"
         "include/database/Database.h"
         "src/database/database.cpp"
