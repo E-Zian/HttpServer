@@ -3,7 +3,7 @@
 #define POKEMONREPO_H
 
 #include "../Interface/IPokemonRepo.h"
-#include "database/Database.h"
+#include "database/database.h"
 #include "model/PokemonModel.h"
 #include <vector>
 
