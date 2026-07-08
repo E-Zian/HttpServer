@@ -2,15 +2,16 @@
 #ifndef ROUTER_H
 #define ROUTER_H
 
+#include "Interface/IDispatcher.h"
+#include "Interface/IRouteRegistrar.h"
 #include "model/HttpTypes.h"
 #include <memory>
 
-#include "Interface/IDispatcher.h"
 
-class Router : public IDispatcher
+class Router : public IDispatcher,public IRouteRegistrar
 {
 public:
-	void addRoute(Method method, const std::string& path, const std::function<Response(ParsedRequestObject&)> &handler) const;
+	void addRoute(Method method, const std::string& path, const std::function<Response(ParsedRequestObject&)> &handler) const override;
 
 	Response dispatch(const std::string& route,ParsedRequestObject& request) const override;
 

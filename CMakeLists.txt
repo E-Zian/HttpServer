@@ -29,6 +29,7 @@ add_executable(HttpServer
         "src/controller/ControllerBase.cpp"
         "include/controller/ControllerBase.h"
         "include/Interface/Idispatcher.h"
+        "include/Interface/IRouteRegistrar.h"
         "include/database/Database.h"
         "src/database/database.cpp"
         "src/repository/UserRepo.cpp"
@@ -40,7 +41,7 @@ add_executable(HttpServer
         src/AssetManager.cpp
         include/AssetManager.h "src/HttpRequestParser.cpp" "include/HttpRequestParser.h"
         src/RateLimiter.cpp
-        include/RateLimiter.h)
+        include/RateLimiter.h "include/Interface/IPokemonRepo.h" "include/Interface/IUserRepo.h")
 
 # Define Windows version for ASIO
 target_compile_definitions(HttpServer PRIVATE _WIN32_WINNT=0x0A00)

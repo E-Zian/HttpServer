@@ -4,7 +4,7 @@
 #include "Helper.h"
 
 
-PokemonController::PokemonController(const Router &router, const PokemonRepo &repo) : ControllerBase(router),
+PokemonController::PokemonController(const Router &router, const IPokemonRepo&repo) : ControllerBase(router),
     repo_(repo) {
     router_.addRoute(Method::GET, "/api/pokemon", [this](const ParsedRequestObject &req) {
         return this->getAllPokemon(req);
@@ -67,7 +67,7 @@ Response PokemonController::createPokemon(const ParsedRequestObject &request) co
         };
 
         if (!newPokemon) {
-            return ResponseFactory::serverError("An unexpected error had occurred in the server");
+            return ResponseFactory::badRequest("Pokemon already exists");
         }
 
         nlohmann::json json;
@@ -178,9 +178,6 @@ Response PokemonController::updatePokemon(const ParsedRequestObject &request) co
         Helper::displayError("{}", e.what());
         return ResponseFactory::badRequest("Invalid request data");
 
-    }catch (PokemonModel::Error::PokemonNotFoundException& e) {
-        Helper::displayError("{}", e.what());
-        return ResponseFactory::badRequest("{}", e.what());
     }
     catch (const std::exception &e) {
         Helper::displayError("{}", e.what());

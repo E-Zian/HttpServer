@@ -9,7 +9,7 @@ std::optional<PokemonModel::Pokemon> PokemonRepo::createPokemon(const PokemonMod
         checkExist.bind(":name", newPokemon.name);
         checkExist.executeStep();
         if (checkExist.getColumn(0).getInt() >= 1) {
-            throw PokemonModel::Error::PokemonAlreadyExistsException{ newPokemon.name };
+            return std::nullopt;
         }
 
         SQLite::Statement createStatement{db_, "INSERT INTO pokemons (name) VALUES(:name)"};
@@ -23,7 +23,7 @@ std::optional<PokemonModel::Pokemon> PokemonRepo::createPokemon(const PokemonMod
         return createdPokemon;
     } catch (const SQLite::Exception &e) {
         Helper::displayError("{}",e.what());
-        return std::nullopt;
+        throw;
     }
 }
 
@@ -33,14 +33,15 @@ std::optional<PokemonRepo::Pokemon> PokemonRepo::getPokemonById(const int id) co
         query.bind(":id", id);
 
         if (!query.executeStep()) {
-            throw SQLite::Exception{"Pokemon does not exist"};
+            return std::nullopt;
         }
         Pokemon newPokemon{query.getColumn(0).getInt(), query.getColumn(1).getText()};
 
         return newPokemon;
     } catch (const SQLite::Exception &e) {
         Helper::displayError("{}",e.what());
-        return std::nullopt;
+        throw;
+
     }
 }
 
@@ -52,7 +53,7 @@ std::optional<PokemonRepo::Pokemon> PokemonRepo::updatePokemon(const Pokemon& up
         checkExist.bind(":id", updatePokemonRequest.id);
         checkExist.executeStep();
         if (checkExist.getColumn(0).getInt() == 0) {
-            throw PokemonModel::Error::PokemonNotFoundException{ updatePokemonRequest.id };
+            return std::nullopt;
         }
 
         SQLite::Statement updateStatement{db_, "UPDATE pokemons SET name = :name WHERE id = :id"};
@@ -65,7 +66,7 @@ std::optional<PokemonRepo::Pokemon> PokemonRepo::updatePokemon(const Pokemon& up
         return updatePokemonRequest;
     } catch (const SQLite::Exception &e) {
         Helper::displayError("{}",e.what());
-        return std::nullopt;
+        throw;
     }
 }
 
@@ -77,7 +78,7 @@ bool PokemonRepo::deletePokemonById(const int id) const {
         checkExist.bind(":id", id);
         checkExist.executeStep();
         if (checkExist.getColumn(0).getInt() == 0) {
-            throw SQLite::Exception{"Pokemon does not exists"};
+            return false;
         }
 
         SQLite::Statement deleteStatement{db_, "DELETE FROM pokemons WHERE id=:id"};
@@ -90,8 +91,7 @@ bool PokemonRepo::deletePokemonById(const int id) const {
         return true;
     } catch (const SQLite::Exception &e) {
         Helper::displayError("{}",e.what());
-
-        return false;
+        throw;
     }
 }
 
@@ -110,6 +110,7 @@ std::optional<std::vector<PokemonRepo::Pokemon> > PokemonRepo::getAllPokemon() c
         return pokemons;
     } catch (const SQLite::Exception &e) {
         Helper::displayError("{}",e.what());
-        return std::nullopt;
+        throw;
+
     }
 }

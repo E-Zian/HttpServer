@@ -8,9 +8,9 @@
 
 class PokemonController :public ControllerBase {
 public:
-	PokemonController(const Router& router,const PokemonRepo& repo);
+	PokemonController(const Router& router,const IPokemonRepo& repo);
 private:
-	const PokemonRepo& repo_;
+	const IPokemonRepo& repo_;
 
 	[[nodiscard]] Response getAllPokemon(const ParsedRequestObject& request) const;
 

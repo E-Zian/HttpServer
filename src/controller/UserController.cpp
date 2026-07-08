@@ -4,7 +4,7 @@
 #include "ResponseFactory.h"
 #include "model/PokemonModel.h"
 
-UserController::UserController(const Router &router, const UserRepo &repo) : ControllerBase(router), repo_{repo} {
+UserController::UserController(const Router &router, const IUserRepo& repo) : ControllerBase(router), repo_{repo} {
     router_.addRoute(Method::GET, "/api/user", [this](const ParsedRequestObject &request) {
         return this->getAllUsers(request);
     });
@@ -40,7 +40,7 @@ Response UserController::createUser(const ParsedRequestObject &request) const {
         };
 
         if (!newUser.has_value()) {
-            return ResponseFactory::serverError("An unexpected error had occurred in the server");
+            return ResponseFactory::badRequest("User email already exists");
         }
         nlohmann::json json;
         json["user"] = *newUser;
@@ -53,10 +53,7 @@ Response UserController::createUser(const ParsedRequestObject &request) const {
         response.header["connection"] = "close";
 
         return response;
-    } catch (const UserModel::Error::UserAlreadyExistsException &e) {
-        Helper::displayError("{}", e.what());
-        return ResponseFactory::badRequest("{}", e.what());
-    } catch (std::exception &e) {
+    }  catch (std::exception &e) {
         Helper::displayError("{}", e.what());
         return ResponseFactory::serverError("An unexpected error has occurred");
     }
@@ -98,7 +95,7 @@ Response UserController::getUser(const ParsedRequestObject &request) const {
         const std::optional<UserModel::User> user{repo_.getUserById(id)};
 
         if (!user) {
-            return ResponseFactory::serverError("An unexpected error has occurred");
+            return ResponseFactory::notFound("User id {} does not exists",id);
         }
 
         nlohmann::json json;
@@ -121,10 +118,6 @@ Response UserController::getUser(const ParsedRequestObject &request) const {
         Helper::displayError("{}", e.what());
 
         return ResponseFactory::badRequest("Invalid user id");
-    }catch (const UserModel::Error::UserNotFoundException& e) {
-        Helper::displayError("{}", e.what());
-        return ResponseFactory::badRequest("{}", e.what());
-
     }
     catch (const std::exception &e) {
         Helper::displayError("{}", e.what());
@@ -151,8 +144,9 @@ Response UserController::updateUser(const ParsedRequestObject &request) const {
         const std::optional<UserModel::User> updatedUser{repo_.updateUser(updateUserRequest)};
 
         if (!updatedUser) {
-            return ResponseFactory::serverError("An unexpected error has occurred");
+            return ResponseFactory::notFound("User id {} does not exists", id);
         }
+
         nlohmann::json json;
         json["user"] = *updatedUser;
         json["message"] = "User updated successfully";
@@ -172,11 +166,7 @@ Response UserController::updateUser(const ParsedRequestObject &request) const {
         Helper::displayError("{}", e.what());
 
         return ResponseFactory::badRequest("Invalid user id");
-    } catch (const UserModel::Error::UserNotFoundException &e) {
-        Helper::displayError("{}", e.what());
-
-        return ResponseFactory::badRequest("User id '{}' not found", e.what());
-    } catch (const std::exception &e) {
+    }  catch (const std::exception &e) {
         Helper::displayError("{}", e.what());
         return ResponseFactory::serverError("An unexpected error has occurred");
     }
@@ -188,7 +178,7 @@ Response UserController::deleteUser(const ParsedRequestObject &request) const {
         const int id{std::stoi(request.parameterValues.at(":id"))};
 
         if (!repo_.deleteUserById(id)) {
-            return ResponseFactory::badRequest("Invalid user id");
+            return ResponseFactory::notFound("User id {} does not exists", id);
         }
 
         nlohmann::json json;

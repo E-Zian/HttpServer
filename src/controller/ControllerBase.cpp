@@ -1,5 +1,5 @@
 #include "Controller/ControllerBase.h"
 
-ControllerBase::ControllerBase(const Router& router) :router_{router} {
+ControllerBase::ControllerBase(const IRouteRegistrar& router) :router_{router} {
 
 }

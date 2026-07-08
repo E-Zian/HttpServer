@@ -8,9 +8,9 @@
 
 class UserController :public ControllerBase {
 public:
-	UserController(const Router& router,const UserRepo& repo);
+	UserController(const Router& router,const IUserRepo& repo);
 private:
-	const UserRepo& repo_;
+	const IUserRepo& repo_;
 
 	[[nodiscard]] Response createUser(const ParsedRequestObject& request) const;
 
