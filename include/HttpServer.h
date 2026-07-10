@@ -12,7 +12,7 @@ class HttpServer {
 public:
 	using tcp = asio::ip::tcp;
 
-	HttpServer(asio::io_context& io,int port,const IDispatcher& dispatcher, RateLimiter& rateLimiter);
+	HttpServer(asio::io_context& io,int port,const IDispatcher& dispatcher, RateLimiter& rateLimiter, asio::ssl::context& sslContext);
 
 	~HttpServer();
 
@@ -26,6 +26,7 @@ private:
 	const IDispatcher& dispatcher_;
 	int port_;
 	RateLimiter& rateLimiter_;
+	 asio::ssl::context& sslContext_;
 
 };
 

@@ -12,6 +12,7 @@ A lightweight HTTP server written in C++ using ASIO for networking.
 - [nlohmann-json](https://github.com/nlohmann/json) — JSON serialization
 - [fmt](https://github.com/fmtlib/fmt) — string formatting
 - [sqlitecpp](https://github.com/srombauts/sqlitecpp) - database
+- [OpenSSL](https://www.openssl.org/) — TLS/HTTPS support
 
 ## Prerequisites
 
@@ -43,4 +44,38 @@ cd HttpServer
 vcpkg install
 ```
 This reads the `vcpkg.json` manifest and installs the stated dependencies automatically.
+
+### 3. Generate a self-signed TLS certificate
+
+The server listens over HTTPS, so it needs a certificate (`server.crt`) and a
+private key (`server.key`) at startup. For local development you can generate a
+self-signed pair with OpenSSL:
+
+```bash
+openssl req -x509 -newkey rsa:2048 -nodes -keyout server.key -out server.crt -days 365 -subj "/CN=localhost"
+```
+
+What the flags do:
+
+| Flag | Meaning |
+| --- | --- |
+| `req -x509` | Produce a self-signed certificate (not a certificate signing request) |
+| `-newkey rsa:2048` | Generate a new 2048-bit RSA key pair |
+| `-nodes` | Do not password-protect the private key (so the server can load it unattended) |
+| `-keyout server.key` | Write the private key to `server.key` |
+| `-out server.crt` | Write the certificate to `server.crt` |
+| `-days 365` | Certificate is valid for 365 days |
+| `-subj "/CN=localhost"` | Set the certificate identity (Common Name) to `localhost` |
+
+> **Windows:** if `openssl` is not on your `PATH`, it ships with Git for Windows.
+> Run it by full path from PowerShell:
+> ```powershell
+> & "C:\Program Files\Git\usr\bin\openssl.exe" req -x509 -newkey rsa:2048 -nodes -keyout server.key -out server.crt -days 365 -subj "/CN=localhost"
+> ```
+
+Place `server.crt` and `server.key` in the server's working directory so it can
+find them at startup. Because the certificate is self-signed, clients will warn
+that it is untrusted — in a browser proceed past the warning, with `curl` use
+`-k`, and in Postman disable **SSL certificate verification**.
+
 

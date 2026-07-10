@@ -5,17 +5,23 @@
 #include <iostream>
 
 
-HttpServer::HttpServer(asio::io_context &io, const int port, const IDispatcher& dispatcher, RateLimiter& rateLimiter)
+HttpServer::HttpServer(asio::io_context &io, const int port, const IDispatcher& dispatcher, RateLimiter& rateLimiter, asio::ssl::context& sslContext)
     : io_{io},
       acceptor_{io, tcp::endpoint(tcp::v4(), port)},
       totalConnections_{},
       dispatcher_{dispatcher},
       port_{port},
-      rateLimiter_{ rateLimiter }
- {
+      rateLimiter_{ rateLimiter },
+      sslContext_{sslContext}
+{
     asio::co_spawn(io, serverListen(), asio::detached);
 
 }
+
+HttpServer::~HttpServer() {
+    Helper::displayMessage("Server on port ({}) closed",port_);
+}
+
 
 asio::awaitable<void> HttpServer::serverListen() {
     Helper::displayMessage("Initiated server listen on port ({})",port_);
@@ -26,7 +32,7 @@ asio::awaitable<void> HttpServer::serverListen() {
 
             asio::ip::tcp::socket socket{co_await acceptor_.async_accept(asio::use_awaitable)};
 
-            const Connection::pointer connection{Connection::create( std::move(socket), ++HttpServer::totalConnections_,dispatcher_,rateLimiter_)};
+            const Connection::pointer connection{Connection::create( std::move(socket), ++HttpServer::totalConnections_,dispatcher_,rateLimiter_,sslContext_)};
 
             Helper::displayMessage("Connection ID : {} Connected", HttpServer::totalConnections_);
 
@@ -35,9 +41,4 @@ asio::awaitable<void> HttpServer::serverListen() {
             Helper::displayError("Http Server error , {}", ex.what());
         }
     }
-}
-
-
-HttpServer::~HttpServer() {
-    Helper::displayMessage("Server on port ({}) closed",port_);
 }

@@ -67,6 +67,13 @@ target_link_libraries(HttpServer PRIVATE nlohmann_json::nlohmann_json)
 find_package(SQLiteCpp CONFIG REQUIRED)
 target_link_libraries(HttpServer PRIVATE SQLiteCpp)
 
+find_package(OpenSSL REQUIRED)
+target_link_libraries(HttpServer PRIVATE OpenSSL::SSL OpenSSL::Crypto)
+
 target_include_directories(HttpServer PRIVATE src)
 target_include_directories(HttpServer PRIVATE include)
 
+add_custom_command(TARGET HttpServer POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${CMAKE_SOURCE_DIR}/server.crt ${CMAKE_SOURCE_DIR}/server.key
+        $<TARGET_FILE_DIR:HttpServer>)

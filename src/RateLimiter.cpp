@@ -18,14 +18,14 @@ CheckLimitResult RateLimiter::checkClientLimit(const std::string& clientIp) {
 		return checkLimitResult;
 	}
 
-	std::chrono::steady_clock::time_point timeNow{ std::chrono::steady_clock::now() };
+	const std::chrono::steady_clock::time_point timeNow{ std::chrono::steady_clock::now() };
 
 	if (timeNow - lastSweep_> Constants::sweepInterval) {
 		sweep(timeNow);
 		lastSweep_ = timeNow;
 	}
 
-	auto clientIt{ clientBucket_.find(clientIp) };
+	const auto clientIt{ clientBucket_.find(clientIp) };
 	if (clientIt == clientBucket_.end()) {
 		clientBucket_[clientIp] = Bucket{ bucketTokenCapacity_ - 1,timeNow };
 		checkLimitResult.tokensLeft = clientBucket_[clientIp].tokens;
@@ -36,7 +36,7 @@ CheckLimitResult RateLimiter::checkClientLimit(const std::string& clientIp) {
 
 	Bucket& clientBucket{ clientIt->second };
 
-	std::chrono::duration<double> elapsedTime{ timeNow - clientBucket.lastRequest };
+	const std::chrono::duration<double> elapsedTime{ timeNow - clientBucket.lastRequest };
 	clientBucket.lastRequest = timeNow;
 
 	clientBucket.tokens += elapsedTime.count() * tokenRefillPerSec_;

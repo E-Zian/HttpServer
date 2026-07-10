@@ -3,6 +3,7 @@
     "asio",
     "fmt",
     "nlohmann-json",
-    "sqlitecpp"
+    "sqlitecpp",
+    "openssl"
   ]
 }
