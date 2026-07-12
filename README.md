@@ -1,6 +1,8 @@
-# HTTP Server
+# HTTP/HTTPS Server
 
-A lightweight HTTP server written in C++ using ASIO for networking.
+A HTTP and HTTPS server written in C++ using ASIO for networking.
+It runs a plaintext HTTP listener and a TLS-encrypted HTTPS listener side by
+side on separate ports.
 
 ## Dependencies
 
@@ -77,5 +79,21 @@ Place `server.crt` and `server.key` in the server's working directory so it can
 find them at startup. Because the certificate is self-signed, clients will warn
 that it is untrusted — in a browser proceed past the warning, with `curl` use
 `-k`, and in Postman disable **SSL certificate verification**.
+
+## Running
+
+The server starts two listeners at once, one per protocol:
+
+| Protocol | Port | Base URL |
+| --- | --- | --- |
+| HTTP  | `6767` | `http://localhost:6767` |
+| HTTPS | `6969` | `https://localhost:6969` |
+
+Both listeners share the same routes, so any endpoint is reachable over either
+protocol — for example `http://localhost:6767/api/user/getAll` and
+`https://localhost:6969/api/user/getAll` hit the same handler.
+
+> The HTTPS certificate is self-signed, so clients will flag it as untrusted.
+
 
 
