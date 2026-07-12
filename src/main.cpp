@@ -55,7 +55,6 @@ int main() {
         int HttpPort{6767};
         Server<asio::ip::tcp::socket> httpServer(io, HttpPort, router, rateLimiter, sslContext);
 
-
         int HttpsPort{6969};
         Server<asio::ssl::stream<asio::ip::tcp::socket> > httpsServer(io, HttpsPort, router, rateLimiter, sslContext);
 

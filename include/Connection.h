@@ -5,11 +5,13 @@
 #include "RateLimiter.h"
 #include "Interface/IDispatcher.h"
 #include "model/HttpTypes.h"
-#include "HttpRequestParser.h"
 #include <asio.hpp>
 #include <memory>
 #include <asio/ssl.hpp>
-#include <asio/ssl.hpp>
+#include <fmt/base.h>
+#include <fmt/color.h>
+
+#include "Helper.h"
 
 namespace Constants {
 	inline constexpr size_t MAX_REQUEST_PER_CONNECTION{ 100 };
@@ -33,8 +35,8 @@ public:
 
 private:
 	const std::string clientIp_;
+	const size_t port_;
 	Stream socket_;
-	// asio::ssl::stream<tcp::socket> socket_;
 	const size_t connectionId_;
 	size_t totalRequests_;
 	const IDispatcher& dispatcher_;
@@ -47,6 +49,15 @@ private:
 
 	asio::awaitable<bool> processRequest();
 
+	template<typename... Args>
+void log(fmt::format_string<Args...> fmt_string, Args &&... args) {
+		Helper::displayMessageWithPort(port_,fmt_string,std::forward<Args>(args)...);
+	}
+
+	template<typename... Args>
+void logError(fmt::format_string<Args...> fmt_string, Args &&... args) {
+		Helper::displayErrorWithPort(port_,fmt_string,std::forward<Args>(args)...);
+	}
 };
 
 

@@ -7,6 +7,8 @@
 #include <fmt/core.h>
 #include <algorithm>
 
+#include "HttpRequestParser.h"
+
 namespace {
     std::optional<size_t> parseRequestForDelimiter(std::string_view buffer) {
         const std::string delimiter{"\r\n\r\n"};
@@ -75,11 +77,13 @@ template<typename Stream>
 Connection<Stream>::Connection(tcp::socket&& connectionSocket, const size_t connectionId, const IDispatcher &dispatcher,
                        RateLimiter &rateLimiter,  asio::ssl::context &sslContext)
     : clientIp_{connectionSocket.remote_endpoint().address().to_string()},
+      port_{connectionSocket.lowest_layer().local_endpoint().port()},
       socket_{makeSocket<Stream>(std::move(connectionSocket), sslContext)},
       connectionId_{connectionId},
       totalRequests_{},
       dispatcher_(dispatcher),
-      rateLimiter_{rateLimiter} {
+      rateLimiter_{rateLimiter}
+{
 }
 
 template <typename Stream>
@@ -91,7 +95,7 @@ Connection<Stream>::pointer Connection<Stream>::create(tcp::socket &&connectionS
 
 template <typename Stream>
 Connection<Stream>::~Connection() {
-    Helper::displayMessage("Connection ID ({}) Disconnected", connectionId_);
+    log("Connection ID ({}) Disconnected", connectionId_);
 }
 
 template <typename Stream>
@@ -108,7 +112,6 @@ asio::awaitable<void> Connection<Stream>::handleRequest() {
     asio::use_awaitable);
         }
 
-
         bool keepAlive{};
         do {
             timeOutTimer.expires_after(std::chrono::seconds(10));
@@ -118,14 +121,14 @@ asio::awaitable<void> Connection<Stream>::handleRequest() {
             );
 
             if (result.index() == 1) {
-                Helper::displayError("Connection ({}) timed out", connectionId_);
+                logError("Connection ({}) timed out", connectionId_);
                 co_await writeResponse(ResponseFactory::requestTimeout("Request timed out"));
                 co_return;
             }
             keepAlive = std::get<0>(result);
         } while (keepAlive);
     } catch (std::exception &e) {
-        Helper::displayError("error occurred in handle request : {}", e.what());
+        logError("error occurred in handle request : {}", e.what());
     }
 }
 
@@ -153,7 +156,7 @@ asio::awaitable<bool> Connection<Stream>::processRequest() {
 
             if (currentHeaderSize > Constants::maxHeaderSize) {
                 checkLimitResult_ = rateLimiter_.checkClientLimit(clientIp_);
-                Helper::displayError(
+                logError(
                     "Header Length Received from Connection Id ({}) was too large, value received : {}", connectionId_,
                     currentHeaderSize);
 
@@ -172,7 +175,7 @@ asio::awaitable<bool> Connection<Stream>::processRequest() {
 
         checkLimitResult_ = rateLimiter_.checkClientLimit(clientIp_);
         if (!checkLimitResult_.allow) {
-            Helper::displayError("Too many request sent from ip {}", clientIp_);
+            logError("Too many request sent from ip {}", clientIp_);
 
             co_await writeResponse(
                 ResponseFactory::failedResponse(HttpStatus::TOO_MANY_REQUEST, "Too many request sent"));
@@ -185,7 +188,7 @@ asio::awaitable<bool> Connection<Stream>::processRequest() {
             co_return false;
         }
 
-        Helper::displayMessage("Headers Received from Connection Id ({})\n{}", connectionId_,
+        log("Headers Received from Connection Id ({})\n{}", connectionId_,
                                std::string_view(requestReceived.data(), delimiterPosition.value()));
 
         const auto rawHeader = std::string(requestReceived.data(), delimiterPosition.value());
@@ -193,7 +196,7 @@ asio::awaitable<bool> Connection<Stream>::processRequest() {
         ParseResultObject parseResult{HttpRequestParser::parseHeader(rawHeader)};
 
         if (!parseResult.result) {
-            Helper::displayError("Connection Id {} Parse Error : {}", connectionId_, parseResult.errorMessage);
+            logError("Connection Id {} Parse Error : {}", connectionId_, parseResult.errorMessage);
 
             co_await writeResponse(
                 ResponseFactory::failedResponse(parseResult.httpStatus, "Parse Error : {}", parseResult.errorMessage));
@@ -220,7 +223,7 @@ asio::awaitable<bool> Connection<Stream>::processRequest() {
 
 
             if (contentLength > Constants::maxBodySize) {
-                Helper::displayError(
+                logError(
                     "Content Length Received from Connection Id ({}) was too large, value received : {}", connectionId_,
                     contentLength);
 
@@ -242,7 +245,7 @@ asio::awaitable<bool> Connection<Stream>::processRequest() {
                 requestReceived.insert(requestReceived.end(), receivingBodyBuffer.begin(),
                                        receivingBodyBuffer.begin() + static_cast<long long>(len));
             }
-            Helper::displayMessage("requestReceived.size()={}, header.size()={}, delimiterPos={}, contentLength={}",
+            log("requestReceived.size()={}, header.size()={}, delimiterPos={}, contentLength={}",
                                    requestReceived.size(), rawHeader.size(), delimiterPosition.value(),
                                    contentLength);
 
@@ -251,7 +254,7 @@ asio::awaitable<bool> Connection<Stream>::processRequest() {
                 &requestReceived[delimiterPosition.value() + static_cast<size_t>(HEADER_DELIMITER_SIZE)],
                 contentLength);
 
-            Helper::displayMessage("Body Received from Connection Id ({})\n{}", connectionId_,
+            log("Body Received from Connection Id ({})\n{}", connectionId_,
                                    parseResult.parseRequestObject.body);
         }
 
@@ -265,7 +268,7 @@ asio::awaitable<bool> Connection<Stream>::processRequest() {
 
 
         if (response.header.contains("connection")) {
-            std::string &responseConnectionHeaderValue{response.header["connection"]};
+            const std::string &responseConnectionHeaderValue{response.header["connection"]};
             Helper::toLower(response.header["connection"]);
             keepAlive = responseConnectionHeaderValue != "close";
         } else {
@@ -274,7 +277,7 @@ asio::awaitable<bool> Connection<Stream>::processRequest() {
         }
 
         if (keepAlive) {
-            Helper::displayMessage("Connection id {} kept alive", connectionId_);
+            log("Connection id {} kept alive", connectionId_);
         }
 
         co_await writeResponse(response);
@@ -282,7 +285,7 @@ asio::awaitable<bool> Connection<Stream>::processRequest() {
 
         co_return keepAlive;
     } catch (std::exception &e) {
-        Helper::displayError("{}", e.what());
+        logError("{}", e.what());
         co_return false;
     }
 }
@@ -298,7 +301,7 @@ asio::awaitable<void> Connection<Stream>::writeResponse(Response response) {
     const std::string headerLines{headerToString(response.header)};
 
     std::string parsedResponse{statusLine + "\r\n" + headerLines + "\r\n" + response.body};
-    Helper::displayMessage("{}", parsedResponse);
+    log("{}", parsedResponse);
     co_await asio::async_write(socket_, asio::buffer(parsedResponse), asio::use_awaitable);
 }
 

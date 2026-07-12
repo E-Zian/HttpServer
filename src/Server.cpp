@@ -20,26 +20,26 @@ Server<Stream>::Server(asio::io_context &io, const int port, const IDispatcher& 
 
 template <typename Stream>
 Server<Stream>::~Server() {
-    Helper::displayMessage("Server on port ({}) closed",port_);
+    log("Server on port ({}) closed",port_);
 }
 
 template <typename Stream>
 asio::awaitable<void> Server<Stream>::serverListen() {
-    Helper::displayMessage("Initiated server listen on port ({})",port_);
+    log("Initiated server listen on port ({})",port_);
 
     while (true) {
         try {
-            Helper::displayMessage("Waiting for connection...");
+            log("Waiting for connection...");
 
             asio::ip::tcp::socket socket{co_await acceptor_.async_accept(asio::use_awaitable)};
 
             const typename Connection<Stream>::pointer connection{Connection<Stream>::create( std::move(socket), ++Server::totalConnections_,dispatcher_,rateLimiter_,sslContext_)};
 
-            Helper::displayMessage("Connection ID : {} Connected", Server::totalConnections_);
+            log("Connection ID : {} Connected", Server::totalConnections_);
 
             asio::co_spawn(io_, connection->handleRequest(), asio::detached);
         } catch (std::exception &ex) {
-            Helper::displayError("Http Server error , {}", ex.what());
+            logError("Http Server error , {}", ex.what());
         }
     }
 }

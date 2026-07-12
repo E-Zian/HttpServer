@@ -29,6 +29,15 @@ private:
 	RateLimiter& rateLimiter_;
 	asio::ssl::context& sslContext_;
 
+	template<typename... Args>
+void log(fmt::format_string<Args...> fmt_string, Args &&... args) {
+		Helper::displayMessageWithPort(port_,fmt_string,std::forward<Args>(args)...);
+	}
+
+	template<typename... Args>
+void logError(fmt::format_string<Args...> fmt_string, Args &&... args) {
+		Helper::displayErrorWithPort(port_,fmt_string,std::forward<Args>(args)...);
+	}
 };
 
 
