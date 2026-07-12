@@ -16,6 +16,13 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Generate self-signed TLS certificate
+      run: >
+        openssl req -x509 -newkey rsa:2048 -nodes
+        -keyout ${{github.workspace}}/server.key
+        -out ${{github.workspace}}/server.crt
+        -days 365 -subj "/CN=localhost"
+
     - name: Configure CMake
       run: >
         cmake -B ${{github.workspace}}/build
