@@ -8,13 +8,14 @@
 #include "Connection.h"
 #include <asio.hpp>
 
-class HttpServer {
+template <typename Stream>
+class Server {
 public:
 	using tcp = asio::ip::tcp;
 
-	HttpServer(asio::io_context& io,int port,const IDispatcher& dispatcher, RateLimiter& rateLimiter, asio::ssl::context& sslContext);
+	Server(asio::io_context& io,int port,const IDispatcher& dispatcher, RateLimiter& rateLimiter, asio::ssl::context& sslContext);
 
-	~HttpServer();
+	~Server();
 
 	asio::awaitable<void> serverListen();
 
@@ -26,7 +27,7 @@ private:
 	const IDispatcher& dispatcher_;
 	int port_;
 	RateLimiter& rateLimiter_;
-	 asio::ssl::context& sslContext_;
+	asio::ssl::context& sslContext_;
 
 };
 

@@ -12,8 +12,8 @@ endif()
 project ("HttpServer")
 
 add_executable(HttpServer
-        "src/HttpServer.cpp"
-        "include/HttpServer.h"
+        "src/Server.cpp"
+        "include/Server.h"
         "src/main.cpp"
         "src/Connection.cpp"
         "include/Connection.h"

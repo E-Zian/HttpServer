@@ -1,11 +1,11 @@
 ﻿#include "Helper.h"
-#include "HttpServer.h"
+#include "Server.h"
 #include "Connection.h"
 #include <asio.hpp>
 #include <iostream>
 
-
-HttpServer::HttpServer(asio::io_context &io, const int port, const IDispatcher& dispatcher, RateLimiter& rateLimiter, asio::ssl::context& sslContext)
+template <typename Stream>
+Server<Stream>::Server(asio::io_context &io, const int port, const IDispatcher& dispatcher, RateLimiter& rateLimiter, asio::ssl::context& sslContext)
     : io_{io},
       acceptor_{io, tcp::endpoint(tcp::v4(), port)},
       totalConnections_{},
@@ -18,12 +18,13 @@ HttpServer::HttpServer(asio::io_context &io, const int port, const IDispatcher& 
 
 }
 
-HttpServer::~HttpServer() {
+template <typename Stream>
+Server<Stream>::~Server() {
     Helper::displayMessage("Server on port ({}) closed",port_);
 }
 
-
-asio::awaitable<void> HttpServer::serverListen() {
+template <typename Stream>
+asio::awaitable<void> Server<Stream>::serverListen() {
     Helper::displayMessage("Initiated server listen on port ({})",port_);
 
     while (true) {
@@ -32,9 +33,9 @@ asio::awaitable<void> HttpServer::serverListen() {
 
             asio::ip::tcp::socket socket{co_await acceptor_.async_accept(asio::use_awaitable)};
 
-            const Connection::pointer connection{Connection::create( std::move(socket), ++HttpServer::totalConnections_,dispatcher_,rateLimiter_,sslContext_)};
+            const typename Connection<Stream>::pointer connection{Connection<Stream>::create( std::move(socket), ++Server::totalConnections_,dispatcher_,rateLimiter_,sslContext_)};
 
-            Helper::displayMessage("Connection ID : {} Connected", HttpServer::totalConnections_);
+            Helper::displayMessage("Connection ID : {} Connected", Server::totalConnections_);
 
             asio::co_spawn(io_, connection->handleRequest(), asio::detached);
         } catch (std::exception &ex) {
@@ -42,3 +43,6 @@ asio::awaitable<void> HttpServer::serverListen() {
         }
     }
 }
+
+template class Server<asio::ip::tcp::socket>;
+template class Server<asio::ssl::stream<asio::ip::tcp::socket>>;

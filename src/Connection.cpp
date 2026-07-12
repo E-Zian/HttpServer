@@ -59,38 +59,55 @@ namespace {
         }
         return headerLines;
     }
+
+    template<typename Stream>
+    Stream makeSocket(asio::ip::tcp::socket &&connectionSocket,asio::ssl::context &sslContext) {
+        if constexpr (std::is_same_v<Stream, asio::ssl::stream<asio::ip::tcp::socket>>) {
+            return {std::move(connectionSocket), sslContext};
+        }else{
+        return {std::move(connectionSocket)};
+
+        }
+    }
 }
 
-Connection::Connection(tcp::socket &&connectionSocket, const size_t connectionId, const IDispatcher &dispatcher,
+template<typename Stream>
+Connection<Stream>::Connection(tcp::socket&& connectionSocket, const size_t connectionId, const IDispatcher &dispatcher,
                        RateLimiter &rateLimiter,  asio::ssl::context &sslContext)
     : clientIp_{connectionSocket.remote_endpoint().address().to_string()},
-      socket_{std::move(connectionSocket), sslContext},
+      socket_{makeSocket<Stream>(std::move(connectionSocket), sslContext)},
       connectionId_{connectionId},
       totalRequests_{},
       dispatcher_(dispatcher),
       rateLimiter_{rateLimiter} {
 }
 
-Connection::pointer Connection::create(tcp::socket &&connectionSocket, const size_t connectionId,
+template <typename Stream>
+Connection<Stream>::pointer Connection<Stream>::create(tcp::socket &&connectionSocket, const size_t connectionId,
                                        const IDispatcher &dispatcher, RateLimiter &rateLimiter,
                                         asio::ssl::context &sslContext) {
     return pointer(new Connection(std::move(connectionSocket), connectionId, dispatcher, rateLimiter, sslContext));
 }
 
-Connection::~Connection() {
+template <typename Stream>
+Connection<Stream>::~Connection() {
     Helper::displayMessage("Connection ID ({}) Disconnected", connectionId_);
 }
 
-asio::awaitable<void> Connection::handleRequest() {
+template <typename Stream>
+asio::awaitable<void> Connection<Stream>::handleRequest() {
     using namespace asio::experimental::awaitable_operators;
-    auto self{shared_from_this()};
+    auto self{this->shared_from_this()};
 
     asio::steady_timer timeOutTimer{co_await asio::this_coro::executor};
 
     try {
-        co_await socket_.async_handshake(
-            asio::ssl::stream_base::server,   // we are the server side
-            asio::use_awaitable);
+        if constexpr (std::is_same_v<Stream, asio::ssl::stream<asio::ip::tcp::socket>> ) {
+            co_await socket_.async_handshake(
+    asio::ssl::stream_base::server,   // we are the server side
+    asio::use_awaitable);
+        }
+
 
         bool keepAlive{};
         do {
@@ -112,9 +129,10 @@ asio::awaitable<void> Connection::handleRequest() {
     }
 }
 
-asio::awaitable<bool> Connection::processRequest() {
+template <typename Stream>
+asio::awaitable<bool> Connection<Stream>::processRequest() {
     try {
-        auto self{shared_from_this()};
+        auto self{this->shared_from_this()};
 
         bool keepAlive{};
 
@@ -269,8 +287,9 @@ asio::awaitable<bool> Connection::processRequest() {
     }
 }
 
-asio::awaitable<void> Connection::writeResponse(Response response) {
-    auto self{shared_from_this()};
+template <typename Stream>
+asio::awaitable<void> Connection<Stream>::writeResponse(Response response) {
+    auto self{this->shared_from_this()};
 
     response.addHeader("x-token-capacity", std::to_string((checkLimitResult_.tokenCapacity)));
     response.addHeader("x-tokens-left", std::to_string((checkLimitResult_.tokensLeft)));
@@ -282,3 +301,6 @@ asio::awaitable<void> Connection::writeResponse(Response response) {
     Helper::displayMessage("{}", parsedResponse);
     co_await asio::async_write(socket_, asio::buffer(parsedResponse), asio::use_awaitable);
 }
+
+template class Connection<asio::ip::tcp::socket>;
+template class Connection<asio::ssl::stream<asio::ip::tcp::socket>>;

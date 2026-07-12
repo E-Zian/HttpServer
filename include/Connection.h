@@ -17,12 +17,14 @@ namespace Constants {
 	inline constexpr size_t maxBodySize{1024 * 1024};
 }
 
-class Connection :public std::enable_shared_from_this<Connection> {
+
+template <typename Stream>
+class Connection :public std::enable_shared_from_this<Connection<Stream>> {
 public:
 	using tcp = asio::ip::tcp;
 	using pointer = std::shared_ptr<Connection>;
 
-	static pointer create(tcp::socket&& connectionSocket, const size_t connectionId,const IDispatcher& dispatcher, RateLimiter& rateLimiter, asio::ssl::context& sslContext);
+	static pointer create(tcp::socket&& connectionSocket,size_t connectionId,const IDispatcher& dispatcher, RateLimiter& rateLimiter, asio::ssl::context& sslContext);
 
 	~Connection();
 
@@ -31,14 +33,15 @@ public:
 
 private:
 	const std::string clientIp_;
-	asio::ssl::stream<tcp::socket> socket_;
-	size_t connectionId_;
+	Stream socket_;
+	// asio::ssl::stream<tcp::socket> socket_;
+	const size_t connectionId_;
 	size_t totalRequests_;
 	const IDispatcher& dispatcher_;
 	RateLimiter& rateLimiter_;
 	CheckLimitResult checkLimitResult_{};
 
-	Connection(tcp::socket&& connectionSocket, const size_t connectionId,const IDispatcher& dispatcher, RateLimiter& rateLimiter, asio::ssl::context& sslContext);
+	Connection(tcp::socket&& connectionSocket,size_t connectionId,const IDispatcher& dispatcher, RateLimiter& rateLimiter, asio::ssl::context& sslContext);
 
 	asio::awaitable<void> writeResponse(Response response);
 

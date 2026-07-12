@@ -1,4 +1,4 @@
-#include "HttpServer.h"
+#include "Server.h"
 #include "controller/TestingController.h"
 #include "Router.h"
 #include "repository/PokemonRepo.h"
@@ -19,50 +19,50 @@
 
 int main() {
     try {
-
-
 #ifdef _WIN32
-    // To display color in terminal
-    const HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
-    DWORD dwMode = 0;
-    GetConsoleMode(hOut, &dwMode);
-    dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-    SetConsoleMode(hOut, dwMode);
+        // To display color in terminal
+        const HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+        DWORD dwMode = 0;
+        GetConsoleMode(hOut, &dwMode);
+        dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+        SetConsoleMode(hOut, dwMode);
 #endif
-    DataBase db{ "server.db" };
-    asio::io_context io;
+        DataBase db{"server.db"};
+        asio::io_context io;
 
-    // For tls
-    asio::ssl::context sslContext{asio::ssl::context::tls_server};
-    sslContext.use_certificate_chain_file("server.crt");
-    sslContext.use_private_key_file("server.key", asio::ssl::context::pem);
+        asio::ssl::context sslContext{asio::ssl::context::tls_server};
+        sslContext.use_certificate_chain_file("server.crt");
+        sslContext.use_private_key_file("server.key", asio::ssl::context::pem);
 
-    // Asset Manager
-    // AssetManager& assetManager {AssetManager::getInstance()};
-    // assetManager.loadAsset("assets/images/quagsire.ico","image/x-icon",);
+        // Asset Manager
+        // AssetManager& assetManager {AssetManager::getInstance()};
+        // assetManager.loadAsset("assets/images/quagsire.ico","image/x-icon",);
 
-    double maxbucketTokenCapacity{ 100.0 };
-    double tokenRefillPerSec{ 1.0 };
-    RateLimiter rateLimiter(maxbucketTokenCapacity, tokenRefillPerSec);
+        constexpr double maxBucketTokenCapacity{100.0};
+        constexpr double tokenRefillPerSec{1.0};
+        RateLimiter rateLimiter(maxBucketTokenCapacity, tokenRefillPerSec);
 
-    const Router router{};
+        const Router router{};
 
-    // Repo Setup
-    const PokemonRepo pokemonRepo{db.get()};
-    const UserRepo userRepo{db.get()};
+        // Repo Setup
+        const PokemonRepo pokemonRepo{db.get()};
+        const UserRepo userRepo{db.get()};
 
-    TestingController testingController{router};
-    PokemonController pokemonController{router, pokemonRepo};
-    UserController userController{router, userRepo};
+        TestingController testingController{router};
+        PokemonController pokemonController{router, pokemonRepo};
+        UserController userController{router, userRepo};
 
-    int portToListen{ 6767 };
-    HttpServer server(io, portToListen,router,rateLimiter,sslContext);
+        int HttpPort{6767};
+        Server<asio::ip::tcp::socket> httpServer(io, HttpPort, router, rateLimiter, sslContext);
 
-    io.run();
-    return 0;
-    }catch (std::exception &e) {
+
+        int HttpsPort{6969};
+        Server<asio::ssl::stream<asio::ip::tcp::socket> > httpsServer(io, HttpsPort, router, rateLimiter, sslContext);
+
+        io.run();
+        return 0;
+    } catch (std::exception &e) {
         Helper::displayError("{}", e.what());
-    return 1;
-
+        return 1;
     }
 }
