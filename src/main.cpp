@@ -53,10 +53,10 @@ int main() {
         UserController userController{router, userRepo};
 
         int HttpPort{6767};
-        Server<asio::ip::tcp::socket> httpServer(io, HttpPort, router, rateLimiter, sslContext);
+        Server<asio::ip::tcp::socket> httpServer(io, HttpPort, router, rateLimiter);
 
         int HttpsPort{6969};
-        Server<asio::ssl::stream<asio::ip::tcp::socket> > httpsServer(io, HttpsPort, router, rateLimiter, sslContext);
+        Server<asio::ssl::stream<asio::ip::tcp::socket> > httpsServer(io, HttpsPort, router, rateLimiter, &sslContext);
 
         io.run();
         return 0;

@@ -69,3 +69,6 @@ Testing/
 .cache/
 .vs/
 enc_temp_folder/
+
+*.key
+*.crt

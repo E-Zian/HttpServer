@@ -63,9 +63,9 @@ namespace {
     }
 
     template<typename Stream>
-    Stream makeSocket(asio::ip::tcp::socket &&connectionSocket,asio::ssl::context &sslContext) {
+    Stream makeSocket(asio::ip::tcp::socket &&connectionSocket,asio::ssl::context *sslContext) {
         if constexpr (std::is_same_v<Stream, asio::ssl::stream<asio::ip::tcp::socket>>) {
-            return {std::move(connectionSocket), sslContext};
+            return {std::move(connectionSocket), *sslContext};
         }else{
         return {std::move(connectionSocket)};
 
@@ -75,7 +75,7 @@ namespace {
 
 template<typename Stream>
 Connection<Stream>::Connection(tcp::socket&& connectionSocket, const size_t connectionId, const IDispatcher &dispatcher,
-                       RateLimiter &rateLimiter,  asio::ssl::context &sslContext)
+                       RateLimiter &rateLimiter,asio::ssl::context* sslContext )
     : clientIp_{connectionSocket.remote_endpoint().address().to_string()},
       port_{connectionSocket.lowest_layer().local_endpoint().port()},
       socket_{makeSocket<Stream>(std::move(connectionSocket), sslContext)},
@@ -89,7 +89,7 @@ Connection<Stream>::Connection(tcp::socket&& connectionSocket, const size_t conn
 template <typename Stream>
 Connection<Stream>::pointer Connection<Stream>::create(tcp::socket &&connectionSocket, const size_t connectionId,
                                        const IDispatcher &dispatcher, RateLimiter &rateLimiter,
-                                        asio::ssl::context &sslContext) {
+                                        asio::ssl::context *sslContext) {
     return pointer(new Connection(std::move(connectionSocket), connectionId, dispatcher, rateLimiter, sslContext));
 }
 

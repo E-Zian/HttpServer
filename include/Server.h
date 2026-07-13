@@ -13,7 +13,7 @@ class Server {
 public:
 	using tcp = asio::ip::tcp;
 
-	Server(asio::io_context& io,int port,const IDispatcher& dispatcher, RateLimiter& rateLimiter, asio::ssl::context& sslContext);
+	Server(asio::io_context& io,int port,const IDispatcher& dispatcher, RateLimiter& rateLimiter, asio::ssl::context* sslContext=nullptr);
 
 	~Server();
 
@@ -27,7 +27,7 @@ private:
 	const IDispatcher& dispatcher_;
 	int port_;
 	RateLimiter& rateLimiter_;
-	asio::ssl::context& sslContext_;
+	asio::ssl::context* sslContext_;
 
 	template<typename... Args>
 void log(fmt::format_string<Args...> fmt_string, Args &&... args) {

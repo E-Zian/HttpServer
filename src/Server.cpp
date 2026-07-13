@@ -5,7 +5,7 @@
 #include <iostream>
 
 template <typename Stream>
-Server<Stream>::Server(asio::io_context &io, const int port, const IDispatcher& dispatcher, RateLimiter& rateLimiter, asio::ssl::context& sslContext)
+Server<Stream>::Server(asio::io_context &io, const int port, const IDispatcher& dispatcher, RateLimiter& rateLimiter, asio::ssl::context* sslContext)
     : io_{io},
       acceptor_{io, tcp::endpoint(tcp::v4(), port)},
       totalConnections_{},

@@ -26,7 +26,7 @@ public:
 	using tcp = asio::ip::tcp;
 	using pointer = std::shared_ptr<Connection>;
 
-	static pointer create(tcp::socket&& connectionSocket,size_t connectionId,const IDispatcher& dispatcher, RateLimiter& rateLimiter, asio::ssl::context& sslContext);
+	static pointer create(tcp::socket&& connectionSocket,size_t connectionId,const IDispatcher& dispatcher, RateLimiter& rateLimiter, asio::ssl::context* sslContext = nullptr);
 
 	~Connection();
 
@@ -43,7 +43,7 @@ private:
 	RateLimiter& rateLimiter_;
 	CheckLimitResult checkLimitResult_{};
 
-	Connection(tcp::socket&& connectionSocket,size_t connectionId,const IDispatcher& dispatcher, RateLimiter& rateLimiter, asio::ssl::context& sslContext);
+	Connection(tcp::socket&& connectionSocket,size_t connectionId,const IDispatcher& dispatcher, RateLimiter& rateLimiter, asio::ssl::context* sslContext = nullptr);
 
 	asio::awaitable<void> writeResponse(Response response);
 
