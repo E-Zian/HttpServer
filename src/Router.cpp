@@ -57,11 +57,11 @@ Response Router::dispatch(const std::string& route, ParsedRequestObject& request
 			request.parameterValues[currentRoute->segmentName] = pathSegment;
 		}
 		else {
-			return ResponseFactory::badRequest("Could not find route {} ", route);
+			return ResponseFactory::notFound("Could not find route {} ", route);
 		}
 	}
 	if (!currentRoute->handler.contains(request.method)) {
-		return ResponseFactory::badRequest("Method {} does not exist for route {}", methodToString.at(request.method), route);
+		return ResponseFactory::notFound("Method {} does not exist for route {}", methodToString.at(request.method), route);
 	}
 	return currentRoute->handler[request.method](request);
 
