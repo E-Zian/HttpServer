@@ -27,8 +27,8 @@ CheckLimitResult RateLimiter::checkClientLimit(const std::string& clientIp) {
 
 	const auto clientIt{ clientBucket_.find(clientIp) };
 	if (clientIt == clientBucket_.end()) {
-		clientBucket_[clientIp] = Bucket{ bucketTokenCapacity_ - 1,timeNow };
-		checkLimitResult.tokensLeft = clientBucket_[clientIp].tokens;
+		auto [bucketIt,_]{clientBucket_.emplace(clientIp, Bucket{ bucketTokenCapacity_ - 1,timeNow })};
+		checkLimitResult.tokensLeft = bucketIt->second.tokens;
 
 		checkLimitResult.allow = true;
 		return checkLimitResult;

@@ -49,8 +49,8 @@ Response Router::dispatch(const std::string& route, ParsedRequestObject& request
 	Route* currentRoute = root_.get();
 
 	for (const auto& pathSegment : pathSegments) {
-		if (currentRoute->children.contains(pathSegment)) {
-			currentRoute = currentRoute->children[pathSegment].get();
+		if (const auto it {currentRoute->children.find(pathSegment) };it != currentRoute->children.end()) {
+			currentRoute = it->second.get();
 		}
 		else if (currentRoute->parameterChild) {
 			currentRoute = currentRoute->parameterChild.get();

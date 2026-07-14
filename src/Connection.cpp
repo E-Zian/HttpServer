@@ -280,7 +280,7 @@ asio::awaitable<bool> Connection<Stream>::processRequest() {
             log("Connection id {} kept alive", connectionId_);
         }
 
-        co_await writeResponse(response);
+        co_await writeResponse(std::move(response));
 
 
         co_return keepAlive;
