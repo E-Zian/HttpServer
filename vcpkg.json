@@ -4,6 +4,7 @@
     "fmt",
     "nlohmann-json",
     "sqlitecpp",
-    "openssl"
+    "openssl",
+    "gtest"
   ]
 }

@@ -11,37 +11,55 @@ endif()
 
 project ("HttpServer")
 
-add_executable(HttpServer
-        "src/Server.cpp"
+set(Headers 
         "include/Server.h"
-        "src/main.cpp"
-        "src/Connection.cpp"
         "include/Connection.h"
         "include/Helper.h"
-        "src/Helper.cpp"
         "include/model/HttpTypes.h"
-        "src/Router.cpp"
         "include/Router.h"
         "include/ResponseFactory.h"
-        "src/ResponseFactory.cpp"
-        "src/controller/TestingController.cpp"
         "include/controller/TestingController.h"
-        "src/controller/ControllerBase.cpp"
         "include/controller/ControllerBase.h"
         "include/Interface/IDispatcher.h"
         "include/Interface/IRouteRegistrar.h"
         "include/database/database.h"
+        "include/repository/UserRepo.h"
+        "include/repository/PokemonRepo.h" 
+        "include/model/UserModel.h" 
+        "include/model/PokemonModel.h" 
+        "include/controller/UserController.h" 
+        "include/controller/PokemonController.h" 
+        include/controller/HomeController.h
+        include/RateLimiter.h 
+        "include/Interface/IPokemonRepo.h" 
+        "include/Interface/IUserRepo.h"
+        include/AssetManager.h 
+        "include/HttpRequestParser.h"
+
+)
+
+set(Sources
+        "src/Server.cpp"
+        "src/main.cpp"
+        "src/Connection.cpp"
+        "src/Helper.cpp"
+        "src/Router.cpp"
+        "src/ResponseFactory.cpp"
+        "src/controller/TestingController.cpp"
+        "src/controller/ControllerBase.cpp"
         "src/database/database.cpp"
         "src/repository/UserRepo.cpp"
         "src/repository/PokemonRepo.cpp"
-        "include/repository/UserRepo.h"
-        "include/repository/PokemonRepo.h" "include/model/UserModel.h" "include/model/PokemonModel.h" "include/controller/UserController.h" "include/controller/PokemonController.h" "src/controller/UserController.cpp" "src/controller/PokemonController.cpp"
+        "src/controller/UserController.cpp" 
+        "src/controller/PokemonController.cpp"
         src/controller/HomeController.cpp
-        include/controller/HomeController.h
         src/AssetManager.cpp
-        include/AssetManager.h "src/HttpRequestParser.cpp" "include/HttpRequestParser.h"
+        "src/HttpRequestParser.cpp" 
         src/RateLimiter.cpp
-        include/RateLimiter.h "include/Interface/IPokemonRepo.h" "include/Interface/IUserRepo.h")
+)
+
+add_executable(HttpServer ${Headers} ${Sources}
+)
 
 if(WIN32)
     # Define Windows version for ASIO
@@ -54,6 +72,8 @@ set_target_properties(HttpServer PROPERTIES
     CXX_STANDARD_REQUIRED ON
     CXX_EXTENSIONS OFF
 )
+
+enable_testing()
 
 find_package(fmt CONFIG REQUIRED)
 target_link_libraries(HttpServer PRIVATE fmt::fmt)
@@ -77,3 +97,6 @@ add_custom_command(TARGET HttpServer POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         ${CMAKE_SOURCE_DIR}/server.crt ${CMAKE_SOURCE_DIR}/server.key
         $<TARGET_FILE_DIR:HttpServer>)
+
+
+add_subdirectory(test)
