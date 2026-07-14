@@ -1,4 +1,4 @@
-#pragma
+#pragma once
 #ifndef UserModel_H
 #define UserModel_H
 

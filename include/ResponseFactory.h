@@ -113,7 +113,7 @@ namespace ResponseFactory {
 	}
 
 	template<typename...Args>
-	Response failedResponse(HttpStatus status,fmt::format_string<Args...> fmt_string,Args&&... args) {
+	Response failedResponse(const HttpStatus status,fmt::format_string<Args...> fmt_string,Args&&... args) {
 		const std::string message{ fmt::format(fmt_string,std::forward<Args>(args)...) };
 
 		nlohmann::json json;
