@@ -103,5 +103,7 @@ add_custom_command(TARGET ServerLib POST_BUILD
         ${CMAKE_SOURCE_DIR}/server.crt ${CMAKE_SOURCE_DIR}/server.key
         $<TARGET_FILE_DIR:HttpServer>)
 
+add_executable(Server main.cpp)
 
+target_link_libraries(Server PRIVATE ServerLib)
 add_subdirectory(test)
