@@ -9,7 +9,7 @@ if (POLICY CMP0141)
   set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
 endif()
 
-project ("HttpServer")
+project ("Server")
 
 set(Headers 
         "include/Server.h"
@@ -38,9 +38,8 @@ set(Headers
 
 )
 
-set(Sources
+set(SourcesNoMain
         "src/Server.cpp"
-        "src/main.cpp"
         "src/Connection.cpp"
         "src/Helper.cpp"
         "src/Router.cpp"
@@ -57,17 +56,19 @@ set(Sources
         "src/HttpRequestParser.cpp" 
         src/RateLimiter.cpp
 )
-
-add_executable(HttpServer ${Headers} ${Sources}
+set(Source ${SourcesNoMain} 
+        "src/main.cpp"
 )
+
+add_library(ServerLib STATIC ${Headers} ${SourcesNoMain})
 
 if(WIN32)
     # Define Windows version for ASIO
-    target_compile_definitions(HttpServer PRIVATE _WIN32_WINNT=0x0A00)
+    target_compile_definitions(ServerLib PRIVATE _WIN32_WINNT=0x0A00)
 endif()
 
-target_compile_features(HttpServer PRIVATE cxx_std_20)   # cleanest — sets AND requires C++20
-set_target_properties(HttpServer PROPERTIES
+target_compile_features(ServerLib PRIVATE cxx_std_20)   # cleanest — sets AND requires C++20
+set_target_properties(ServerLib PROPERTIES
     CXX_STANDARD 20
     CXX_STANDARD_REQUIRED ON
     CXX_EXTENSIONS OFF
@@ -75,25 +76,29 @@ set_target_properties(HttpServer PROPERTIES
 
 enable_testing()
 
-find_package(fmt CONFIG REQUIRED)
-target_link_libraries(HttpServer PRIVATE fmt::fmt)
 
 find_package(asio REQUIRED)
-target_link_libraries(HttpServer PRIVATE asio::asio)
 
 find_package(nlohmann_json CONFIG REQUIRED)
-target_link_libraries(HttpServer PRIVATE nlohmann_json::nlohmann_json)
 
 find_package(SQLiteCpp CONFIG REQUIRED)
-target_link_libraries(HttpServer PRIVATE SQLiteCpp)
 
 find_package(OpenSSL REQUIRED)
-target_link_libraries(HttpServer PRIVATE OpenSSL::SSL OpenSSL::Crypto)
 
-target_include_directories(HttpServer PRIVATE src)
-target_include_directories(HttpServer PRIVATE include)
+find_package(fmt CONFIG REQUIRED)
+target_link_libraries(ServerLib PRIVATE 
+    fmt::fmt
+    asio::asio
+    SQLiteCpp
+    nlohmann_json::nlohmann_json
+    OpenSSL::SSL OpenSSL::Crypto
+)
 
-add_custom_command(TARGET HttpServer POST_BUILD
+
+target_include_directories(ServerLib PRIVATE src)
+target_include_directories(ServerLib PUBLIC include)
+
+add_custom_command(TARGET ServerLib POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         ${CMAKE_SOURCE_DIR}/server.crt ${CMAKE_SOURCE_DIR}/server.key
         $<TARGET_FILE_DIR:HttpServer>)
