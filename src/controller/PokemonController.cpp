@@ -56,7 +56,7 @@ Response PokemonController::createPokemon(const ParsedRequestObject &request) co
     try {
         Response response{HttpStatus::OK, {}, {}};
 
-        nlohmann::json receivedJson{nlohmann::json::parse(request.body)};
+        nlohmann::json receivedJson = nlohmann::json::parse(request.body);
 
         if (!receivedJson.contains("pokemon")) {
             return ResponseFactory::badRequest("No pokemon was passed");
@@ -145,7 +145,7 @@ Response PokemonController::updatePokemon(const ParsedRequestObject &request) co
             return ResponseFactory::badRequest("No pokemon id was passed");
         }
         const int id{std::stoi(request.parameterValues.at(":id"))};
-        const nlohmann::json receivedJson{nlohmann::json::parse(request.body)};
+        const nlohmann::json receivedJson = nlohmann::json::parse(request.body);
 
         if (!receivedJson.contains("pokemon")) {
             return ResponseFactory::badRequest("No pokemon was passed");

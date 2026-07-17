@@ -30,7 +30,7 @@ Response UserController::createUser(const ParsedRequestObject &request) const {
     try {
         Response response;
 
-        const nlohmann::json receivedJson{nlohmann::json::parse(request.body)};
+        const nlohmann::json receivedJson = nlohmann::json::parse(request.body);
         if (!receivedJson.contains("user")) {
             return ResponseFactory::badRequest("No user received");
         }
@@ -127,7 +127,7 @@ Response UserController::updateUser(const ParsedRequestObject &request) const {
         Response response;
         const int id{std::stoi(request.parameterValues.at(":id"))};
 
-        const nlohmann::json receivedJson{nlohmann::json::parse(request.body)};
+        const nlohmann::json receivedJson = nlohmann::json::parse(request.body);
 
         if (!receivedJson.contains("user")) {
             return ResponseFactory::badRequest("Invalid user id");

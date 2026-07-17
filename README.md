@@ -56,7 +56,11 @@ self-signed pair with OpenSSL:
 ```bash
 openssl req -x509 -newkey rsa:2048 -nodes -keyout server.key -out server.crt -days 365 -subj "/CN=localhost"
 ```
-
+> **Windows:** if `openssl` is not on your `PATH`, it ships with Git for Windows.
+> Run it by full path from PowerShell:
+> ```powershell
+> & "C:\Program Files\Git\usr\bin\openssl.exe" req -x509 -newkey rsa:2048 -nodes -keyout server.key -out server.crt -days 365 -subj "/CN=localhost"
+> ```
 What the flags do:
 
 | Flag | Meaning |
@@ -69,11 +73,7 @@ What the flags do:
 | `-days 365` | Certificate is valid for 365 days |
 | `-subj "/CN=localhost"` | Set the certificate identity (Common Name) to `localhost` |
 
-> **Windows:** if `openssl` is not on your `PATH`, it ships with Git for Windows.
-> Run it by full path from PowerShell:
-> ```powershell
-> & "C:\Program Files\Git\usr\bin\openssl.exe" req -x509 -newkey rsa:2048 -nodes -keyout server.key -out server.crt -days 365 -subj "/CN=localhost"
-> ```
+
 
 Place `server.crt` and `server.key` in the server's working directory so it can
 find them at startup. Because the certificate is self-signed, clients will warn

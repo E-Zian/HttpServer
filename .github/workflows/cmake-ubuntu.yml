@@ -33,6 +33,8 @@ jobs:
           key: vcpkg-${{ matrix.os }}-${{ hashFiles('vcpkg.json') }}
 
       - name: Generate self-signed TLS certificate
+        env:
+          MSYS_NO_PATHCONV: 1
         run: >
           openssl req -x509 -newkey rsa:2048 -nodes
           -keyout server.key

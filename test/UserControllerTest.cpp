@@ -42,7 +42,7 @@ TEST(UserControllerTest, Create_User_Success) {
 
 	EXPECT_EQ(response.status,HttpStatus::OK) << "Http Status not equal to OK";
 
-	nlohmann::json json{nlohmann::json::parse(response.body)};
+	nlohmann::json json = nlohmann::json::parse(response.body);
 
 	EXPECT_EQ(json["user"].get<UserModel::User>(), fakeUser)<< "Incorrect user";
 	EXPECT_EQ(json["message"], "User created successfully") << "Incorrect Message";
