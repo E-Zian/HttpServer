@@ -1,7 +1,4 @@
-﻿# CMakeList.txt : Top-level CMake project file, do global configuration
-# and include sub-projects here.
-#
-cmake_minimum_required (VERSION 3.10)
+﻿cmake_minimum_required (VERSION 3.10)
 
 # Enable Hot Reload for MSVC compilers if supported.
 if (POLICY CMP0141)
@@ -56,9 +53,6 @@ set(SourcesNoMain
         "src/HttpRequestParser.cpp" 
         src/RateLimiter.cpp
 )
-set(Source ${SourcesNoMain} 
-        "src/main.cpp"
-)
 
 add_library(ServerLib STATIC ${Headers} ${SourcesNoMain})
 
@@ -68,14 +62,8 @@ if(WIN32)
 endif()
 
 target_compile_features(ServerLib PUBLIC cxx_std_20)
-set_target_properties(ServerLib PROPERTIES
-    CXX_STANDARD 20
-    CXX_STANDARD_REQUIRED ON
-    CXX_EXTENSIONS OFF
-)
 
 enable_testing()
-
 
 find_package(asio REQUIRED)
 
@@ -93,7 +81,6 @@ target_link_libraries(ServerLib PUBLIC
     nlohmann_json::nlohmann_json
     OpenSSL::SSL OpenSSL::Crypto
 )
-
 
 target_include_directories(ServerLib PUBLIC include)
 
