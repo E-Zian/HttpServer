@@ -13,7 +13,7 @@ class Router : public IDispatcher,public IRouteRegistrar
 public:
 	void addRoute(Method method, const std::string& path, const std::function<Response(ParsedRequestObject&)> &handler) const override;
 
-	Response dispatch(const std::string& route,ParsedRequestObject& request) const override;
+	Response dispatch(ParsedRequestObject& request) const override;
 
 	Router();
 

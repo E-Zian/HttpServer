@@ -50,7 +50,6 @@ Response UserController::createUser(const ParsedRequestObject &request) const {
         response.status = HttpStatus::OK;
         response.header["content-type"] = "application/json";
         response.header["content-length"] = std::to_string(response.body.length());
-        response.header["connection"] = "close";
 
         return response;
     }  catch (std::exception &e) {
@@ -78,7 +77,6 @@ Response UserController::getAllUsers(const ParsedRequestObject &request) const {
         response.status = HttpStatus::OK;
         response.header["content-type"] = "application/json";
         response.header["content-length"] = std::to_string(response.body.length());
-        response.header["connection"] = "close";
 
         return response;
     } catch (const std::exception &e) {
@@ -107,7 +105,6 @@ Response UserController::getUser(const ParsedRequestObject &request) const {
         response.status = HttpStatus::OK;
         response.header["content-type"] = "application/json";
         response.header["content-length"] = std::to_string(response.body.length());
-        response.header["connection"] = "close";
 
         return response;
     } catch (const std::invalid_argument &e) {
@@ -155,7 +152,6 @@ Response UserController::updateUser(const ParsedRequestObject &request) const {
         response.status = HttpStatus::OK;
         response.header["content-type"] = "application/json";
         response.header["content-length"] = std::to_string(response.body.length());
-        response.header["connection"] = "close";
 
         return response;
     } catch (const std::invalid_argument &e) {
@@ -189,7 +185,6 @@ Response UserController::deleteUser(const ParsedRequestObject &request) const {
         response.status = HttpStatus::OK;
         response.header["content-type"] = "application/json";
         response.header["content-length"] = std::to_string(response.body.length());
-        response.header["connection"] = "close";
 
         return response;
     } catch (const std::invalid_argument &) {

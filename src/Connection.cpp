@@ -236,7 +236,7 @@ asio::awaitable<bool> Connection<Stream>::processRequest() {
             std::array<char, 128> receivingBodyBuffer{};
             constexpr size_t HEADER_DELIMITER_SIZE = 4;
             while (requestReceived.size() < contentLength + rawHeader.size() + HEADER_DELIMITER_SIZE) {
-                size_t len{
+                const size_t len{
                     co_await socket_.async_read_some(asio::buffer(receivingBodyBuffer),
                                                      asio::use_awaitable)
                 };
@@ -258,7 +258,7 @@ asio::awaitable<bool> Connection<Stream>::processRequest() {
                                    parseResult.parseRequestObject.body);
         }
 
-        Response response{dispatcher_.dispatch(parseResult.parseRequestObject.route, parseResult.parseRequestObject)};
+        Response response{dispatcher_.dispatch(parseResult.parseRequestObject)};
 
         ++totalRequests_;
 
@@ -268,7 +268,7 @@ asio::awaitable<bool> Connection<Stream>::processRequest() {
 
 
         if (response.header.contains("connection")) {
-            const std::string &responseConnectionHeaderValue{response.header["connection"]};
+            const std::string& responseConnectionHeaderValue{response.header["connection"]};
             Helper::toLower(response.header["connection"]);
             keepAlive = responseConnectionHeaderValue != "close";
         } else {

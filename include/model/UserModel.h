@@ -35,6 +35,9 @@ namespace UserModel {
 		int id;
 		std::string name;
 		std::string email;
+
+		bool operator==(const User&) const = default;
+
 	};
 	inline void to_json( nlohmann::json& j, const User& user) {
 		j = nlohmann::json{{"id", user.id}, {"name", user.name},{"email",user.email}};

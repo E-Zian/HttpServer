@@ -59,7 +59,7 @@ namespace {
 	};
 }
 
-ParseResultObject HttpRequestParser::parseHeader(std::string_view rawHeader) {
+ParseResultObject HttpRequestParser::parseHeader(const std::string_view rawHeader) {
 	ParseResultObject parseResult{};
 	size_t positionIterator{};
 

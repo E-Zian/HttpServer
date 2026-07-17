@@ -9,6 +9,8 @@ namespace PokemonModel {
 	struct Pokemon {
 		int id;
 		std::string name;
+
+		bool operator==(const Pokemon& pokemon) const = default;
 	};
 
 	inline void to_json( nlohmann::json& json, const PokemonModel::Pokemon& pokemon) {

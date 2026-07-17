@@ -7,7 +7,7 @@
 
 class IDispatcher {
 public:
-    virtual Response dispatch(const std::string& route,ParsedRequestObject& request) const = 0;
+    virtual Response dispatch(ParsedRequestObject& request) const = 0;
     virtual ~IDispatcher() = default;
 };
 

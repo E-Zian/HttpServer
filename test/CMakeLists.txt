@@ -1,18 +1,18 @@
 cmake_minimum_required(VERSION 3.10)
 
 set(Sources
-        serverTest.cpp
-
+        UserControllerTest.cpp
+        main.cpp
 )
 
-add_executable(ServerTest ${Sources} ${Headers})
+add_executable(ServerTest ${Sources})
 
 find_package(GTest CONFIG REQUIRED)
 
-target_link_libraries(ServerTest PRIVATE
+target_link_libraries(ServerTest PUBLIC
         ServerLib
         GTest::gtest
-        GTest::gtest_main
+#        GTest::gtest_main
         GTest::gmock
 )
 target_include_directories(

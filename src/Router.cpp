@@ -24,7 +24,7 @@ void Router::addRoute(const Method method, const std::string& path, const std::f
 	Route* currentRoute = root_.get();
 
 	for (const auto& pathSegment : pathSegments) {
-		if (pathSegment.size() != 0 && pathSegment[0] == ':') {
+		if (!pathSegment.empty() && pathSegment[0] == ':') {
 			if (currentRoute->parameterChild && currentRoute->parameterChild->segmentName != pathSegment) {
 				throw std::invalid_argument("Param conflict at: " + pathSegment + " in added route : " + path);
 			}
@@ -43,9 +43,9 @@ void Router::addRoute(const Method method, const std::string& path, const std::f
 
 }
 
-Response Router::dispatch(const std::string& route, ParsedRequestObject& request) const {
+Response Router::dispatch(ParsedRequestObject& request) const {
 
-	const std::vector<std::string> pathSegments{ Helper::split(route,'/') };
+	const std::vector<std::string> pathSegments{ Helper::split(request.route,'/') };
 	Route* currentRoute = root_.get();
 
 	for (const auto& pathSegment : pathSegments) {
@@ -57,11 +57,11 @@ Response Router::dispatch(const std::string& route, ParsedRequestObject& request
 			request.parameterValues[currentRoute->segmentName] = pathSegment;
 		}
 		else {
-			return ResponseFactory::notFound("Could not find route {} ", route);
+			return ResponseFactory::notFound("Could not find route {} ", request.route);
 		}
 	}
 	if (!currentRoute->handler.contains(request.method)) {
-		return ResponseFactory::notFound("Method {} does not exist for route {}", methodToString.at(request.method), route);
+		return ResponseFactory::notFound("Method {} does not exist for route {}", methodToString.at(request.method), request.route);
 	}
 	return currentRoute->handler[request.method](request);
 
