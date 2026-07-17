@@ -64,10 +64,10 @@ add_library(ServerLib STATIC ${Headers} ${SourcesNoMain})
 
 if(WIN32)
     # Define Windows version for ASIO
-    target_compile_definitions(ServerLib PRIVATE _WIN32_WINNT=0x0A00)
+    target_compile_definitions(ServerLib PUBLIC _WIN32_WINNT=0x0A00)
 endif()
 
-target_compile_features(ServerLib PRIVATE cxx_std_20)   # cleanest — sets AND requires C++20
+target_compile_features(ServerLib PUBLIC cxx_std_20)
 set_target_properties(ServerLib PROPERTIES
     CXX_STANDARD 20
     CXX_STANDARD_REQUIRED ON
@@ -86,7 +86,7 @@ find_package(SQLiteCpp CONFIG REQUIRED)
 find_package(OpenSSL REQUIRED)
 
 find_package(fmt CONFIG REQUIRED)
-target_link_libraries(ServerLib PRIVATE 
+target_link_libraries(ServerLib PUBLIC
     fmt::fmt
     asio::asio
     SQLiteCpp
@@ -95,15 +95,15 @@ target_link_libraries(ServerLib PRIVATE
 )
 
 
-target_include_directories(ServerLib PRIVATE src)
 target_include_directories(ServerLib PUBLIC include)
 
-add_custom_command(TARGET ServerLib POST_BUILD
+add_executable(Server src/main.cpp)
+
+add_custom_command(TARGET Server POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         ${CMAKE_SOURCE_DIR}/server.crt ${CMAKE_SOURCE_DIR}/server.key
-        $<TARGET_FILE_DIR:HttpServer>)
+        $<TARGET_FILE_DIR:Server>)
 
-add_executable(Server main.cpp)
 
 target_link_libraries(Server PRIVATE ServerLib)
 add_subdirectory(test)
