@@ -15,7 +15,7 @@ side on separate ports.
 - [fmt](https://github.com/fmtlib/fmt) — string formatting
 - [sqlitecpp](https://github.com/srombauts/sqlitecpp) - database
 - [OpenSSL](https://www.openssl.org/) — TLS/HTTPS support
-
+- gtest — unit test framework (GoogleTest + GoogleMock)
 ## Prerequisites
 
 ### 1. Install vcpkg
