@@ -52,7 +52,11 @@ Response UserController::createUser(const ParsedRequestObject &request) const {
         response.header["content-length"] = std::to_string(response.body.length());
 
         return response;
-    }  catch (std::exception &e) {
+    }  catch (const nlohmann::json::exception& e) {
+        Helper::displayError("{}", e.what());
+        return ResponseFactory::badRequest("Invalid JSON body");
+    }
+    catch (std::exception &e) {
         Helper::displayError("{}", e.what());
         return ResponseFactory::serverError("An unexpected error has occurred");
     }
@@ -154,7 +158,10 @@ Response UserController::updateUser(const ParsedRequestObject &request) const {
         response.header["content-length"] = std::to_string(response.body.length());
 
         return response;
-    } catch (const std::invalid_argument &e) {
+    } catch (const nlohmann::json::exception& e) {
+        Helper::displayError("{}", e.what());
+        return ResponseFactory::badRequest("Invalid JSON body");
+    }catch (const std::invalid_argument &e) {
         Helper::displayError("{}", e.what());
 
         return ResponseFactory::badRequest("Invalid user id");
