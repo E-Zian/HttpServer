@@ -4,6 +4,17 @@ A HTTP and HTTPS server written in C++ using ASIO for networking.
 It runs a plaintext HTTP listener and a TLS-encrypted HTTPS listener side by
 side on separate ports.
 
+## Features
+
+- **HTTP/1.1 and HTTPS** — plaintext and TLS listeners run side by side on separate ports
+- **TLS / HTTPS** via OpenSSL
+- **Token-bucket rate limiting** per client IP — a 100-request burst that refills at
+  1 token/second, with periodic sweeping of idle clients
+- **SQLite persistence** via SQLiteCpp
+- **Keep-alive** persistent connections, with request timeouts and size limits
+  (maximum header and body sizes)
+- Asynchronous I/O built on C++20 coroutines (Asio)
+
 ## Dependencies
 
 - [CMake](https://cmake.org/) 
@@ -90,10 +101,113 @@ The server starts two listeners at once, one per protocol:
 | HTTPS | `6969` | `https://localhost:6969` |
 
 Both listeners share the same routes, so any endpoint is reachable over either
-protocol — for example `http://localhost:6767/api/user/getAll` and
-`https://localhost:6969/api/user/getAll` hit the same handler.
+protocol — for example `http://localhost:6767/api/user` and
+`https://localhost:6969/api/user` hit the same handler.
 
 > The HTTPS certificate is self-signed, so clients will flag it as untrusted.
+
+## API
+
+All request and response bodies are JSON. Successful responses return the affected
+resource plus a `message`; errors return `{ "errorMessage": "..." }`.
+
+Every response also carries rate-limit headers so clients can see their remaining quota:
+
+| Header | Meaning |
+| --- | --- |
+| `x-token-capacity` | Maximum request tokens for your IP |
+| `x-tokens-left` | Tokens remaining before requests are throttled |
+
+### Users
+
+| Method | Path | Description |
+| --- | --- | --- |
+| GET | `/api/user` | List all users |
+| POST | `/api/user` | Create a user |
+| GET | `/api/user/:id` | Get a user by id |
+| PUT | `/api/user/:id` | Update a user |
+| DELETE | `/api/user/:id` | Delete a user |
+
+**Create a user** — `POST /api/user`
+
+Request:
+```json
+{ "user": { "name": "alice", "email": "alice@example.com" } }
+```
+Response `200 OK`:
+```json
+{
+  "user": { "id": 1, "name": "alice", "email": "alice@example.com" },
+  "message": "User created successfully"
+}
+```
+Errors: `400` — missing `user` field, malformed JSON, or the email already exists.
+
+Get, update, and delete follow the same shape. `:id` must be an integer — a
+non-numeric id returns `400`, and a user that does not exist returns `404`.
+
+### Pokemon
+
+| Method | Path | Description |
+| --- | --- | --- |
+| GET | `/api/pokemon` | List all pokemon |
+| POST | `/api/pokemon` | Create a pokemon |
+| GET | `/api/pokemon/:id` | Get a pokemon by id |
+| PUT | `/api/pokemon/:id` | Update a pokemon |
+| DELETE | `/api/pokemon/:id` | Delete a pokemon |
+
+**Create a pokemon** — `POST /api/pokemon`
+
+Request:
+```json
+{ "pokemon": { "name": "pikachu" } }
+```
+Response `200 OK`:
+```json
+{
+  "pokemon": { "id": 1, "name": "pikachu" },
+  "message": "Pokemon created successfully"
+}
+```
+Errors: `400` — missing `pokemon` field, malformed JSON, or the pokemon already exists.
+
+### Status codes
+
+| Code | Meaning |
+| --- | --- |
+| `200` | Success |
+| `400` | Bad request — malformed JSON, missing field, or invalid id |
+| `404` | Resource not found |
+| `408` | Request timed out |
+| `413` | Request body too large |
+| `429` | Too many requests — rate limit exceeded |
+| `431` | Request headers too large |
+| `500` | Internal server error |
+
+### Utility routes
+
+| Method | Path | Description |
+| --- | --- | --- |
+| GET | `/` | Basic test response |
+| GET | `/testing` | Plain-text test route |
+| GET | `/json` | Sample JSON response |
+
+## Testing
+
+Unit tests use **GoogleTest** and **GoogleMock**. The controllers are tested against a
+mocked repository, so the suite needs no running database.
+
+Build the project, then run the tests with CTest from your build directory:
+
+```bash
+ctest --test-dir out/build/x64-debug --output-on-failure
+```
+
+Or run the test executable directly for the full GoogleTest report:
+
+```bash
+out/build/x64-debug/test/ServerTest        # ServerTest.exe on Windows
+```
 
 
 
