@@ -63,6 +63,6 @@ Response Router::dispatch(ParsedRequestObject& request) const {
 	if (!currentRoute->handler.contains(request.method)) {
 		return ResponseFactory::notFound("Method {} does not exist for route {}", methodToString.at(request.method), request.route);
 	}
-	return currentRoute->handler[request.method](request);
+	return currentRoute->handler.at(request.method)(request);
 
 }
