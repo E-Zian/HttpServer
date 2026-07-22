@@ -214,7 +214,7 @@ out/build/x64-debug/test/ServerTest        # ServerTest.exe on Windows
 
 The `io_context` runs across a thread pool so the event loop can use every CPU
 core. The runs below were measured with [oha](https://github.com/hatoo/oha)
-against the `/api/pokemon` endpoint (`--insecure` accepts the self-signed cert),
+against the `/api/pokemon` endpoint on the release build which disables logging for performance improvements (`--insecure` accepts the self-signed cert),
 before and after enabling the pool:
 
 ```bash
@@ -223,15 +223,16 @@ oha -z 30s -c 50 --insecure https://localhost:6969/api/pokemon
 
 | Single-threaded | Multi-threaded (thread pool) |
 | --- | --- |
-| <img src="https://github.com/user-attachments/assets/23a52891-85b9-4a64-81a9-bff26f468251" width="450" alt="oha result — single-threaded"> | <img src="https://github.com/user-attachments/assets/adc37a9e-cde9-4ef1-9cc0-76bea4287800" width="450" alt="oha result — multi-threaded"> |
+| <img width="450" alt="image" src="https://github.com/user-attachments/assets/bb02f6fa-8752-4e75-83f6-3c833f1df9a5" /> |  <img width="450" alt="image" src="https://github.com/user-attachments/assets/7fb139ab-51f0-4314-8201-f88353459437" />|
 
 **Benchmark:** 
+The limited performance gain is due to the fact that the db access is serialize 
 
 | Metric | Single-threaded | Multi-threaded | Improvement |
 | --- | --- | --- | --- |
-| Requests/sec | 653.4 | 1276.9 | ≈1.95× |
-| Average latency | 76.60 ms | 39.17 ms | −49% |
-| p50 latency | 74.75 ms | 38.08 ms | −49% |
-| p99 latency | 104.13 ms | 72.98 ms | −30% |
-| p99.9 latency | 387.0 ms | 108.8 ms | −72% |
+| Requests/sec | 9346.1 | 14918.4 | ≈1.60× |
+| Average latency | 5.35 ms | 3.35 ms | −37% |
+| p50 latency | 5.05 ms | 3.29 ms | −35% |
+| p99 latency | 10.49 ms | 6.14 ms | −42% |
+| p99.9 latency | 14.12 ms | 8.26 ms | −42% |
 
