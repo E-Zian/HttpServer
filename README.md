@@ -9,11 +9,12 @@ side on separate ports.
 - **HTTP/1.1 and HTTPS** — plaintext and TLS listeners run side by side on separate ports
 - **TLS / HTTPS** via OpenSSL
 - **Token-bucket rate limiting** per client IP — a 100-request burst that refills at
-  1 token/second, with periodic sweeping of idle clients
+  1 tokens/second, with periodic sweeping of idle clients
 - **SQLite persistence** via SQLiteCpp
 - **Keep-alive** persistent connections, with request timeouts and size limits
   (maximum header and body sizes)
-- Asynchronous I/O built on C++20 coroutines (Asio)
+- Asynchronous I/O built on C++20 coroutines (Asio), with the event loop running
+  across a thread pool for multi-core scaling
 
 ## Dependencies
 
