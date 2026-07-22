@@ -1,9 +1,11 @@
 #include "repository/UserRepo.h"
-
 #include "Helper.h"
+#include <mutex>
 
 std::optional<UserRepo::User> UserRepo::createUser(const UserModel::DTO::CreateUserRequest &createUserRequest) const {
     try {
+        std::scoped_lock lock(sharedMutex_);
+
         SQLite::Transaction transaction{db_};
         SQLite::Statement checkExist{db_, "SELECT COUNT(*) FROM users WHERE email = :email"};
         checkExist.bind(":email", createUserRequest.email);
@@ -32,6 +34,8 @@ std::optional<UserRepo::User> UserRepo::createUser(const UserModel::DTO::CreateU
 
 std::optional<std::vector<UserRepo::User>> UserRepo::getAllUser() const {
     try {
+        std::scoped_lock lock(sharedMutex_);
+
         std::vector<UserRepo::User> users;
 
         SQLite::Statement fetchStatement{db_, "SELECT * FROM users"};
@@ -49,6 +53,8 @@ std::optional<std::vector<UserRepo::User>> UserRepo::getAllUser() const {
 
 std::optional<UserRepo::User> UserRepo::getUserById(const int id) const {
     try {
+        std::scoped_lock lock(sharedMutex_);
+
         SQLite::Statement fetchStatement{db_, "SELECT id, name, email FROM users WHERE id = :id"};
         fetchStatement.bind(":id", id);
 
@@ -72,6 +78,8 @@ std::optional<UserRepo::User> UserRepo::getUserById(const int id) const {
 
 std::optional<UserRepo::User> UserRepo::updateUser(const User &updateUserRequest) const {
     try {
+        std::scoped_lock lock(sharedMutex_);
+
         SQLite::Transaction transaction{db_};
 
         SQLite::Statement checkExist{db_,"SELECT COUNT(*) FROM users WHERE id = :id"};
@@ -102,6 +110,8 @@ std::optional<UserRepo::User> UserRepo::updateUser(const User &updateUserRequest
 
 bool UserRepo::deleteUserById(const int id) const {
     try {
+        std::scoped_lock lock(sharedMutex_);
+
         SQLite::Transaction transaction{db_};
         SQLite::Statement checkExist{db_, "SELECT COUNT(*) FROM users WHERE id = :id"};
         checkExist.bind(":id", id);

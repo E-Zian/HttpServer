@@ -1,8 +1,11 @@
 #include "repository/PokemonRepo.h"
 #include "Helper.h"
+#include "mutex"
 
 std::optional<PokemonModel::Pokemon> PokemonRepo::createPokemon(const PokemonModel::DTO::CreatePokemonRequest &newPokemon) const {
     try {
+        std::scoped_lock lock(sharedMutex_);
+
         SQLite::Transaction transaction{db_};
 
         SQLite::Statement checkExist{db_, "SELECT COUNT(*) FROM pokemons WHERE name = :name"};
@@ -29,6 +32,8 @@ std::optional<PokemonModel::Pokemon> PokemonRepo::createPokemon(const PokemonMod
 
 std::optional<PokemonRepo::Pokemon> PokemonRepo::getPokemonById(const int id) const {
     try {
+        std::scoped_lock lock(sharedMutex_);
+
         SQLite::Statement query{db_, "SELECT id, name FROM pokemons WHERE id = :id"};
         query.bind(":id", id);
 
@@ -47,6 +52,8 @@ std::optional<PokemonRepo::Pokemon> PokemonRepo::getPokemonById(const int id) co
 
 std::optional<PokemonRepo::Pokemon> PokemonRepo::updatePokemon(const Pokemon& updatePokemonRequest) const {
     try {
+        std::scoped_lock lock(sharedMutex_);
+
         SQLite::Transaction transaction{db_};
 
         SQLite::Statement checkExist(db_, "SELECT COUNT(*) FROM pokemons WHERE id = :id");
@@ -72,6 +79,8 @@ std::optional<PokemonRepo::Pokemon> PokemonRepo::updatePokemon(const Pokemon& up
 
 bool PokemonRepo::deletePokemonById(const int id) const {
     try {
+        std::scoped_lock lock(sharedMutex_);
+
         SQLite::Transaction transaction{db_};
 
         SQLite::Statement checkExist{db_, "SELECT COUNT(*) FROM pokemons WHERE id = :id"};
@@ -97,6 +106,8 @@ bool PokemonRepo::deletePokemonById(const int id) const {
 
 std::optional<std::vector<PokemonRepo::Pokemon> > PokemonRepo::getAllPokemon() const {
     try {
+        std::scoped_lock lock(sharedMutex_);
+
         std::vector<PokemonRepo::Pokemon> pokemons;
         SQLite::Statement query{db_, "SELECT id,name FROM pokemons"};
 

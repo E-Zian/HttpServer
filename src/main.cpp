@@ -12,6 +12,7 @@
 #include <asio.hpp>
 #include <fmt/color.h>
 #include <asio/ssl.hpp>
+#include <thread>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -45,8 +46,8 @@ int main() {
         const Router router{};
 
         // Repo Setup
-        const PokemonRepo pokemonRepo{db.get()};
-        const UserRepo userRepo{db.get()};
+        const PokemonRepo pokemonRepo{db};
+        const UserRepo userRepo{db};
 
         TestingController testingController{router};
         PokemonController pokemonController{router, pokemonRepo};
@@ -58,7 +59,21 @@ int main() {
         int HttpsPort{6969};
         Server<asio::ssl::stream<asio::ip::tcp::socket> > httpsServer(io, HttpsPort, router, rateLimiter, &sslContext);
 
+        std::vector<std::jthread> threads{};
+
+        size_t maxThreads{ std::thread::hardware_concurrency() };
+        if (maxThreads == 0) {
+            maxThreads = 1;
+        }
+       
+        for (size_t i{}; i+1 < maxThreads;i++) {
+            threads.emplace_back([&]() {
+                io.run();
+                });
+        }
+
         io.run();
+
         return 0;
     } catch (std::exception &e) {
         Helper::displayError("{}", e.what());

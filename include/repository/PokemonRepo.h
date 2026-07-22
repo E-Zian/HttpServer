@@ -6,12 +6,12 @@
 #include "database/database.h"
 #include "model/PokemonModel.h"
 #include <vector>
-
+#include <mutex>
 
 class PokemonRepo: public IPokemonRepo {
 	using Pokemon = PokemonModel::Pokemon;
 public:
-	explicit PokemonRepo(SQLite::Database& db) :db_{ db } {};
+	PokemonRepo(DataBase& db) :db_{ db.getDb() }, sharedMutex_{db.getMutex()} {};
 
 	[[nodiscard]] std::optional<Pokemon> createPokemon(const PokemonModel::DTO::CreatePokemonRequest &newPokemon) const override;
 
@@ -25,6 +25,7 @@ public:
 
 private:
 	SQLite::Database& db_;
+	std::mutex& sharedMutex_;
 };
 
 

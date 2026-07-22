@@ -33,9 +33,9 @@ asio::awaitable<void> Server<Stream>::serverListen() {
 
             asio::ip::tcp::socket socket{co_await acceptor_.async_accept(asio::use_awaitable)};
 
-            const typename Connection<Stream>::pointer connection{Connection<Stream>::create( std::move(socket), ++Server::totalConnections_,dispatcher_,rateLimiter_,sslContext_)};
+            const typename Connection<Stream>::pointer connection{Connection<Stream>::create( std::move(socket), ++totalConnections_,dispatcher_,rateLimiter_,sslContext_)};
 
-            log("Connection ID : {} Connected", Server::totalConnections_);
+            log("Connection ID : {} Connected", totalConnections_.load());
 
             asio::co_spawn(io_, connection->handleRequest(), asio::detached);
         } catch (std::exception &ex) {

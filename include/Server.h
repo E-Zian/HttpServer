@@ -7,6 +7,7 @@
 #include "Router.h"
 #include "Connection.h"
 #include <asio.hpp>
+#include <atomic>
 
 template <typename Stream>
 class Server {
@@ -23,7 +24,7 @@ public:
 private:
 	asio::io_context& io_;
 	tcp::acceptor acceptor_;
-	size_t totalConnections_;
+	std::atomic<size_t>totalConnections_;
 	const IDispatcher& dispatcher_;
 	int port_;
 	RateLimiter& rateLimiter_;

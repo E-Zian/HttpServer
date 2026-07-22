@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <string>
 #include <chrono>
+#include <mutex>
 
 namespace Constants {
     inline constexpr std::chrono::seconds sweepInterval{ 60 };
@@ -34,6 +35,7 @@ class RateLimiter {
         double tokenRefillPerSec_{} ;
         std::chrono::steady_clock::time_point lastSweep_{};
         std::unordered_map<std::string,Bucket> clientBucket_{};
+        std::mutex mutex_{};
 
         void sweep(const std::chrono::steady_clock::time_point& now);
 };

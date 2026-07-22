@@ -18,6 +18,8 @@ CheckLimitResult RateLimiter::checkClientLimit(const std::string& clientIp) {
 		return checkLimitResult;
 	}
 
+	std::scoped_lock lock{ mutex_ };
+
 	const std::chrono::steady_clock::time_point timeNow{ std::chrono::steady_clock::now() };
 
 	if (timeNow - lastSweep_> Constants::sweepInterval) {

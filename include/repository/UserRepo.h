@@ -6,13 +6,14 @@
 #include "database/database.h"
 #include "model/UserModel.h"
 #include <vector>
+#include <mutex>
 
 class UserRepo : public IUserRepo
 {
 	using User = UserModel::User;
 
 public:
-	explicit UserRepo(SQLite::Database& db) :db_{ db } {};
+	UserRepo(DataBase& db) :db_{ db.getDb() }, sharedMutex_{ db.getMutex()} {};
 
 	[[nodiscard]] std::optional<User> createUser(const UserModel::DTO::CreateUserRequest &createUserRequest) const override;
 
@@ -26,7 +27,7 @@ public:
 
 private:
 	SQLite::Database& db_;
-
+	std::mutex& sharedMutex_;
 
 };
 
