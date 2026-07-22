@@ -210,5 +210,28 @@ Or run the test executable directly for the full GoogleTest report:
 out/build/x64-debug/test/ServerTest        # ServerTest.exe on Windows
 ```
 
+## Concurrency Improvements
 
+The `io_context` runs across a thread pool so the event loop can use every CPU
+core. The runs below were measured with [oha](https://github.com/hatoo/oha)
+against the `/api/pokemon` endpoint (`--insecure` accepts the self-signed cert),
+before and after enabling the pool:
+
+```bash
+oha -z 30s -c 50 --insecure https://localhost:6969/api/pokemon
+```
+
+| Single-threaded | Multi-threaded (thread pool) |
+| --- | --- |
+| <img src="https://github.com/user-attachments/assets/23a52891-85b9-4a64-81a9-bff26f468251" width="450" alt="oha result — single-threaded"> | <img src="https://github.com/user-attachments/assets/adc37a9e-cde9-4ef1-9cc0-76bea4287800" width="450" alt="oha result — multi-threaded"> |
+
+**Benchmark:** 
+
+| Metric | Single-threaded | Multi-threaded | Improvement |
+| --- | --- | --- | --- |
+| Requests/sec | 653.4 | 1276.9 | ≈1.95× |
+| Average latency | 76.60 ms | 39.17 ms | −49% |
+| p50 latency | 74.75 ms | 38.08 ms | −49% |
+| p99 latency | 104.13 ms | 72.98 ms | −30% |
+| p99.9 latency | 387.0 ms | 108.8 ms | −72% |
 
