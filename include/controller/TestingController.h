@@ -7,7 +7,7 @@
 
 class TestingController :public ControllerBase{
 	public:
-	explicit TestingController(const Router& router);
+	explicit TestingController(Router& router);
 	private:
 };
 

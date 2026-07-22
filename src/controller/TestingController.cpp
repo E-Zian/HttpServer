@@ -15,7 +15,7 @@ namespace {
 	}
 }
 
-TestingController::TestingController(const Router& router) : ControllerBase(router) {
+TestingController::TestingController(Router& router) : ControllerBase(router) {
 	router_.addRoute(Method::GET, "/", testing);
 	router_.addRoute(Method::GET, "/testing", customTesting);
 	router_.addRoute(Method::GET, "/json", jsonTesting);

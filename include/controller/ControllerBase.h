@@ -6,10 +6,10 @@
 
 class ControllerBase {
 public:
-	explicit ControllerBase(const IRouteRegistrar& router);
+	explicit ControllerBase(IRouteRegistrar& router);
 
 protected:
-	const IRouteRegistrar& router_;
+	IRouteRegistrar& router_;
 };
 
 #endif 

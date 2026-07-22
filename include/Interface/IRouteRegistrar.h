@@ -6,7 +6,7 @@
 
 class IRouteRegistrar {
 public:
-    virtual void addRoute(Method method, const std::string& path, const std::function<Response(ParsedRequestObject&)>& handler) const = 0;
+    virtual void addRoute(Method method, const std::string& path, const std::function<Response(ParsedRequestObject&)>& handler) = 0;
     virtual ~IRouteRegistrar() = default;
 };
 

@@ -4,7 +4,7 @@
 #include "ResponseFactory.h"
 #include "model/PokemonModel.h"
 
-UserController::UserController(const Router &router, const IUserRepo& repo) : ControllerBase(router), repo_{repo} {
+UserController::UserController(Router &router, const IUserRepo& repo) : ControllerBase(router), repo_{repo} {
     router_.addRoute(Method::GET, "/api/user", [this](const ParsedRequestObject &request) {
         return this->getAllUsers(request);
     });

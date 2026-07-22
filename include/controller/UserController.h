@@ -8,7 +8,7 @@
 
 class UserController :public ControllerBase {
 public:
-	UserController(const Router& router,const IUserRepo& repo);
+	UserController(Router& router,const IUserRepo& repo);
 private:
 	const IUserRepo& repo_;
 

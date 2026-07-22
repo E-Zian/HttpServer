@@ -39,11 +39,11 @@ int main() {
         // AssetManager& assetManager {AssetManager::getInstance()};
         // assetManager.loadAsset("assets/images/quagsire.ico","image/x-icon",);
 
-        constexpr double maxBucketTokenCapacity{100.0};
-        constexpr double tokenRefillPerSec{1.0};
+        constexpr double maxBucketTokenCapacity{100000.0};
+        constexpr double tokenRefillPerSec{ 100000.0 };
         RateLimiter rateLimiter(maxBucketTokenCapacity, tokenRefillPerSec);
 
-        const Router router{};
+        Router router{};
 
         // Repo Setup
         const PokemonRepo pokemonRepo{db};

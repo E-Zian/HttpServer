@@ -4,7 +4,7 @@
 #include "Helper.h"
 
 
-PokemonController::PokemonController(const Router &router, const IPokemonRepo&repo) : ControllerBase(router),
+PokemonController::PokemonController(Router &router, const IPokemonRepo&repo) : ControllerBase(router),
     repo_(repo) {
     router_.addRoute(Method::GET, "/api/pokemon", [this](const ParsedRequestObject &req) {
         return this->getAllPokemon(req);

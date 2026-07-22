@@ -32,6 +32,7 @@ asio::awaitable<void> Server<Stream>::serverListen() {
             log("Waiting for connection...");
 
             asio::ip::tcp::socket socket{co_await acceptor_.async_accept(asio::use_awaitable)};
+            socket.set_option(asio::ip::tcp::no_delay(true));
 
             const typename Connection<Stream>::pointer connection{Connection<Stream>::create( std::move(socket), ++totalConnections_,dispatcher_,rateLimiter_,sslContext_)};
 

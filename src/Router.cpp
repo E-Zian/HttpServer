@@ -17,7 +17,7 @@ namespace {
 
 Router::Router() : root_(std::make_unique<Route>()) {};
 
-void Router::addRoute(const Method method, const std::string& path, const std::function<Response(ParsedRequestObject&)>& handler) const {
+void Router::addRoute(const Method method, const std::string& path, const std::function<Response(ParsedRequestObject&)>& handler) {
 
 	const std::vector<std::string> pathSegments{ Helper::split(path, '/') };
 

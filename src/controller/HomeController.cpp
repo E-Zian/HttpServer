@@ -9,7 +9,7 @@
 namespace  {
 }
 
-HomeController::HomeController(const Router &router):ControllerBase(router) {
+HomeController::HomeController(Router &router):ControllerBase(router) {
     router_.addRoute(Method::GET,"/favicon.ico",[this](ParsedRequestObject& request) {
         return ResponseFactory::dummy();
     });

@@ -8,7 +8,7 @@
 
 class PokemonController :public ControllerBase {
 public:
-	PokemonController(const Router& router,const IPokemonRepo& repo);
+	PokemonController(Router& router,const IPokemonRepo& repo);
 private:
 	const IPokemonRepo& repo_;
 
