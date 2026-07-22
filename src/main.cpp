@@ -39,8 +39,8 @@ int main() {
         // AssetManager& assetManager {AssetManager::getInstance()};
         // assetManager.loadAsset("assets/images/quagsire.ico","image/x-icon",);
 
-        constexpr double maxBucketTokenCapacity{100000.0};
-        constexpr double tokenRefillPerSec{ 100000.0 };
+        constexpr double maxBucketTokenCapacity{100.0};
+        constexpr double tokenRefillPerSec{ 1.0 };
         RateLimiter rateLimiter(maxBucketTokenCapacity, tokenRefillPerSec);
 
         Router router{};
@@ -65,7 +65,7 @@ int main() {
         if (maxThreads == 0) {
             maxThreads = 1;
         }
-       
+
         for (size_t i{}; i+1 < maxThreads;i++) {
             threads.emplace_back([&]() {
                 io.run();
