@@ -30,7 +30,7 @@ std::vector<std::string> Helper::split(const std::string& text, const char delim
 }
 
 std::string Helper::toLower(std::string& text) {
-    std::transform(text.begin(), text.end(), text.begin(), ::tolower);
+    std::ranges::transform(text, text.begin(), ::tolower);
     return text;
 }
 

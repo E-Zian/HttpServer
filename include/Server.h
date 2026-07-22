@@ -32,7 +32,9 @@ private:
 
 	template<typename... Args>
 void log(fmt::format_string<Args...> fmt_string, Args &&... args) {
+#ifndef NDEBUG
 		Helper::displayMessageWithPort(port_,fmt_string,std::forward<Args>(args)...);
+#endif
 	}
 
 	template<typename... Args>
