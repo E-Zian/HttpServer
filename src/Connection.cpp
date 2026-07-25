@@ -122,7 +122,7 @@ asio::awaitable<void> Connection<Stream>::handleRequest() {
 
             if (result.index() == 1) {
                 logError("Connection ({}) timed out", connectionId_);
-                co_await writeResponse(ResponseFactory::requestTimeout("Request timed out"));
+                co_await writeResponse(ResponseFactory::failedResponse(HttpStatus::REQUEST_TIMEOUT, "Request timed out") );
                 co_return;
             }
             keepAlive = std::get<0>(result);

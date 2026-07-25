@@ -32,7 +32,7 @@ Response UserController::createUser(const ParsedRequestObject &request) const {
 
         const nlohmann::json receivedJson = nlohmann::json::parse(request.body);
         if (!receivedJson.contains("user")) {
-            return ResponseFactory::badRequest("No user received");
+            return ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "No user received");
         }
 
         const std::optional<UserModel::User> newUser{
@@ -40,7 +40,7 @@ Response UserController::createUser(const ParsedRequestObject &request) const {
         };
 
         if (!newUser.has_value()) {
-            return ResponseFactory::badRequest("User email already exists");
+            return ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "User email already exists");
         }
         nlohmann::json json;
         json["user"] = *newUser;
@@ -54,11 +54,11 @@ Response UserController::createUser(const ParsedRequestObject &request) const {
         return response;
     }  catch (const nlohmann::json::exception& e) {
         Helper::displayError("{}", e.what());
-        return ResponseFactory::badRequest("Invalid JSON body");
+        return ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "Invalid JSON body");
     }
     catch (std::exception &e) {
         Helper::displayError("{}", e.what());
-        return ResponseFactory::serverError("An unexpected error has occurred");
+        return ResponseFactory::failedResponse(HttpStatus::SERVER_ERROR, "An unexpected error has occurred");
     }
 }
 
@@ -69,7 +69,7 @@ Response UserController::getAllUsers(const ParsedRequestObject &request) const {
         const std::optional<std::vector<UserModel::User> > userList{repo_.getAllUser()};
 
         if (!userList) {
-            return ResponseFactory::serverError("An unexpected error has occurred");
+            return ResponseFactory::failedResponse(HttpStatus::SERVER_ERROR,"An unexpected error has occurred");
         }
 
         nlohmann::json json;
@@ -85,7 +85,7 @@ Response UserController::getAllUsers(const ParsedRequestObject &request) const {
         return response;
     } catch (const std::exception &e) {
         Helper::displayError("{}", e.what());
-        return ResponseFactory::serverError("An unexpected error has occurred");
+        return ResponseFactory::failedResponse(HttpStatus::SERVER_ERROR, "An unexpected error has occurred");
     }
 }
 
@@ -97,7 +97,7 @@ Response UserController::getUser(const ParsedRequestObject &request) const {
         const std::optional<UserModel::User> user{repo_.getUserById(id)};
 
         if (!user) {
-            return ResponseFactory::notFound("User id {} does not exists",id);
+            return ResponseFactory::failedResponse(HttpStatus::NOT_FOUND, "User id {} does not exists",id);
         }
 
         nlohmann::json json;
@@ -114,15 +114,15 @@ Response UserController::getUser(const ParsedRequestObject &request) const {
     } catch (const std::invalid_argument &e) {
         Helper::displayError("{}", e.what());
 
-        return ResponseFactory::badRequest("Invalid user id");
+        return ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "Invalid user id");
     } catch (const std::out_of_range &e) {
         Helper::displayError("{}", e.what());
 
-        return ResponseFactory::badRequest("Invalid user id");
+        return ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "Invalid user id");
     }
     catch (const std::exception &e) {
         Helper::displayError("{}", e.what());
-        return ResponseFactory::serverError("An unexpected error has occurred");
+        return ResponseFactory::failedResponse(HttpStatus::SERVER_ERROR, "An unexpected error has occurred");
     }
 }
 
@@ -134,7 +134,7 @@ Response UserController::updateUser(const ParsedRequestObject &request) const {
         const nlohmann::json receivedJson = nlohmann::json::parse(request.body);
 
         if (!receivedJson.contains("user")) {
-            return ResponseFactory::badRequest("Invalid user id");
+            return ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "Invalid user id");
         }
 
         const UserModel::User updateUserRequest{
@@ -145,7 +145,7 @@ Response UserController::updateUser(const ParsedRequestObject &request) const {
         const std::optional<UserModel::User> updatedUser{repo_.updateUser(updateUserRequest)};
 
         if (!updatedUser) {
-            return ResponseFactory::notFound("User id {} does not exists", id);
+            return ResponseFactory::failedResponse(HttpStatus::NOT_FOUND, "User id {} does not exists", id);
         }
 
         nlohmann::json json;
@@ -160,18 +160,18 @@ Response UserController::updateUser(const ParsedRequestObject &request) const {
         return response;
     } catch (const nlohmann::json::exception& e) {
         Helper::displayError("{}", e.what());
-        return ResponseFactory::badRequest("Invalid JSON body");
+        return ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "Invalid JSON body");
     }catch (const std::invalid_argument &e) {
         Helper::displayError("{}", e.what());
 
-        return ResponseFactory::badRequest("Invalid user id");
+        return ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "Invalid user id");
     } catch (const std::out_of_range &e) {
         Helper::displayError("{}", e.what());
 
-        return ResponseFactory::badRequest("Invalid user id");
+        return ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "Invalid user id");
     }  catch (const std::exception &e) {
         Helper::displayError("{}", e.what());
-        return ResponseFactory::serverError("An unexpected error has occurred");
+        return ResponseFactory::failedResponse(HttpStatus::SERVER_ERROR, "An unexpected error has occurred");
     }
 }
 
@@ -181,7 +181,7 @@ Response UserController::deleteUser(const ParsedRequestObject &request) const {
         const int id{std::stoi(request.parameterValues.at(":id"))};
 
         if (!repo_.deleteUserById(id)) {
-            return ResponseFactory::notFound("User id {} does not exists", id);
+            return ResponseFactory::failedResponse(HttpStatus::NOT_FOUND, "User id {} does not exists", id);
         }
 
         nlohmann::json json;
@@ -195,11 +195,11 @@ Response UserController::deleteUser(const ParsedRequestObject &request) const {
 
         return response;
     } catch (const std::invalid_argument &) {
-        return ResponseFactory::badRequest("Invalid user id");
+        return ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "Invalid user id");
     } catch (const std::out_of_range &) {
-        return ResponseFactory::badRequest("Invalid user id");
+        return ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "Invalid user id");
     } catch (const std::exception &e) {
         Helper::displayError("{}", e.what());
-        return ResponseFactory::serverError("An unexpected error had occurred in the server");
+        return ResponseFactory::failedResponse(HttpStatus::SERVER_ERROR, "An unexpected error had occurred in the server");
     }
 }

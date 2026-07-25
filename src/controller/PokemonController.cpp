@@ -35,7 +35,7 @@ Response PokemonController::getAllPokemon(const ParsedRequestObject &request) co
         const std::optional<std::vector<PokemonModel::Pokemon> > pokemons{repo_.getAllPokemon()};
 
         if (!pokemons) {
-            return ResponseFactory::serverError("An unexpected error had occurred in the server");;
+            return ResponseFactory::failedResponse(HttpStatus::SERVER_ERROR,"An unexpected error had occurred in the server");
         }
 
         json["pokemons"] = *pokemons;
@@ -48,7 +48,7 @@ Response PokemonController::getAllPokemon(const ParsedRequestObject &request) co
         return response;
     } catch (const std::exception &e) {
         Helper::displayError("{}", e.what());
-        return ResponseFactory::serverError("An unexpected error had occurred in the server");
+        return ResponseFactory::failedResponse(HttpStatus::SERVER_ERROR, "An unexpected error had occurred in the server");
     }
 }
 
@@ -59,7 +59,7 @@ Response PokemonController::createPokemon(const ParsedRequestObject &request) co
         nlohmann::json receivedJson = nlohmann::json::parse(request.body);
 
         if (!receivedJson.contains("pokemon")) {
-            return ResponseFactory::badRequest("No pokemon was passed");
+            return ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST,"No pokemon was passed");
         }
 
         const std::optional<PokemonModel::Pokemon> newPokemon{
@@ -67,7 +67,7 @@ Response PokemonController::createPokemon(const ParsedRequestObject &request) co
         };
 
         if (!newPokemon) {
-            return ResponseFactory::badRequest("Pokemon already exists");
+            return ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "Pokemon already exists");
         }
 
         nlohmann::json json;
@@ -81,19 +81,19 @@ Response PokemonController::createPokemon(const ParsedRequestObject &request) co
         return response;
     } catch (const nlohmann::json::parse_error &e) {
         Helper::displayError("{}", e.what());
-        return ResponseFactory::badRequest("Invalid JSON");
+        return ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST,"Invalid JSON");
 
     } catch (const nlohmann::json::exception &e) {
         Helper::displayError("{}", e.what());
-        return ResponseFactory::badRequest("Invalid pokemon data");
+        return ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "Invalid pokemon data");
 
     }catch (const PokemonModel::Error::PokemonAlreadyExistsException& e) {
         Helper::displayError("{}", e.what());
-        return ResponseFactory::badRequest("{}", e.what());
+        return ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "{}", e.what());
 
     }catch (const std::exception &e) {
         Helper::displayError("{}", e.what());
-        return ResponseFactory::serverError("An unexpected error had occurred in the server");
+        return ResponseFactory::failedResponse(HttpStatus::SERVER_ERROR, "An unexpected error had occurred in the server");
     }
 }
 
@@ -102,14 +102,14 @@ Response PokemonController::getPokemon(const ParsedRequestObject &request) const
         Response response{HttpStatus::OK, {}, {}};
 
         if (!request.parameterValues.contains(":id")) {
-            return ResponseFactory::badRequest("No pokemon id was passed");
+            return ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "No pokemon id was passed");
         }
         int id{std::stoi(request.parameterValues.at(":id"))};
 
         const std::optional<PokemonModel::Pokemon> pokemon{repo_.getPokemonById(id)};
 
         if (!pokemon) {
-            return ResponseFactory::notFound("Pokemon id {} not found", id);
+            return ResponseFactory::failedResponse(HttpStatus::NOT_FOUND, "Pokemon id {} not found", id);
         }
 
         nlohmann::json json;
@@ -124,16 +124,16 @@ Response PokemonController::getPokemon(const ParsedRequestObject &request) const
     } catch (const std::invalid_argument& e) {
         Helper::displayError("{}", e.what());
 
-        return ResponseFactory::badRequest("Invalid pokemon id");
+        return ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "Invalid pokemon id");
 
     } catch (const std::out_of_range& e) {
         Helper::displayError("{}", e.what());
 
-        return ResponseFactory::badRequest("Invalid pokemon id");
+        return ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "Invalid pokemon id");
 
     }catch (const std::exception &e) {
         Helper::displayError("{}", e.what());
-        return ResponseFactory::serverError("An unexpected error had occurred in the server");
+        return ResponseFactory::failedResponse(HttpStatus::SERVER_ERROR, "An unexpected error had occurred in the server");
     }
 }
 
@@ -142,13 +142,13 @@ Response PokemonController::updatePokemon(const ParsedRequestObject &request) co
         Response response{HttpStatus::OK, {}, {}};
 
         if (!request.parameterValues.contains(":id")) {
-            return ResponseFactory::badRequest("No pokemon id was passed");
+            return ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "No pokemon id was passed");
         }
         const int id{std::stoi(request.parameterValues.at(":id"))};
         const nlohmann::json receivedJson = nlohmann::json::parse(request.body);
 
         if (!receivedJson.contains("pokemon")) {
-            return ResponseFactory::badRequest("No pokemon was passed");
+            return ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "No pokemon was passed");
         }
         const auto updatePokemonRequest{receivedJson["pokemon"].get<PokemonModel::DTO::UpdatePokemonRequest>()};
 
@@ -157,7 +157,7 @@ Response PokemonController::updatePokemon(const ParsedRequestObject &request) co
         const std::optional<PokemonModel::Pokemon> updatedPokemon{repo_.updatePokemon(updatedPokemonRequest)};
 
         if (!updatedPokemon) {
-            return ResponseFactory::notFound("Pokemon id {} not found", id);
+            return ResponseFactory::failedResponse(HttpStatus::NOT_FOUND, "Pokemon id {} not found", id);
         }
 
         nlohmann::json json;
@@ -169,19 +169,19 @@ Response PokemonController::updatePokemon(const ParsedRequestObject &request) co
 
         return response;
     } catch (const std::invalid_argument &) {
-        return ResponseFactory::badRequest("Invalid pokemon id");
+        return ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "Invalid pokemon id");
 
     } catch (const std::out_of_range &) {
-        return ResponseFactory::badRequest("Invalid pokemon id");
+        return ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "Invalid pokemon id");
 
     } catch (const nlohmann::json::exception &e) {
         Helper::displayError("{}", e.what());
-        return ResponseFactory::badRequest("Invalid request data");
+        return ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "Invalid request data");
 
     }
     catch (const std::exception &e) {
         Helper::displayError("{}", e.what());
-        return ResponseFactory::serverError("An unexpected error had occurred in the server");
+        return ResponseFactory::failedResponse(HttpStatus::SERVER_ERROR, "An unexpected error had occurred in the server");
     }
 }
 
@@ -190,13 +190,13 @@ Response PokemonController::deletePokemon(const ParsedRequestObject &request) co
         Response response{HttpStatus::OK, {}, {}};
 
         if (!request.parameterValues.contains(":id")) {
-            return ResponseFactory::badRequest("No pokemon id was passed");
+            return ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "No pokemon id was passed");
         }
 
         const int id{std::stoi(request.parameterValues.at(":id"))};
 
         if (!repo_.deletePokemonById(id)) {
-            return ResponseFactory::notFound("pokemon with id {} not found", id);
+            return ResponseFactory::failedResponse(HttpStatus::NOT_FOUND, "pokemon with id {} not found", id);
         }
 
         nlohmann::json json;
@@ -207,13 +207,13 @@ Response PokemonController::deletePokemon(const ParsedRequestObject &request) co
 
         return response;
     } catch (const std::invalid_argument &) {
-        return ResponseFactory::badRequest("Invalid pokemon id");
+        return ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "Invalid pokemon id");
 
     } catch (const std::out_of_range &) {
-        return ResponseFactory::badRequest("Invalid pokemon id");
+        return ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "Invalid pokemon id");
 
     } catch (const std::exception &e) {
         Helper::displayError("{}", e.what());
-        return ResponseFactory::serverError("An unexpected error had occurred in the server");
+        return ResponseFactory::failedResponse(HttpStatus::SERVER_ERROR, "An unexpected error had occurred in the server");
     }
 }

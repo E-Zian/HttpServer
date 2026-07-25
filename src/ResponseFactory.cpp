@@ -13,7 +13,6 @@ Response ResponseFactory::dummy() {
 Response ResponseFactory::customText(const std::string &msg) {
     Response response(HttpStatus::OK, {}, msg);
     response.header["content-type"] = "text/plain";
-    response.header["connection"] = "close";
     response.header["content-length"] = std::to_string(msg.length());
 
     return response;
