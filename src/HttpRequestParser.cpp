@@ -25,7 +25,7 @@ namespace {
 		if (delimiterPosition == std::string::npos) {
 			return std::nullopt;
 		}
-		std::string headerTitle{ headerLine.substr(0, delimiterPosition) };
+		const std::string headerTitle{ headerLine.substr(0, delimiterPosition) };
 		return std::make_pair(Helper::toLower(headerTitle), Helper::trim(headerLine.substr(delimiterPosition + 1)));
 	}
 

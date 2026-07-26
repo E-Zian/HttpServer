@@ -268,8 +268,7 @@ asio::awaitable<bool> Connection<Stream>::processRequest() {
 
 
         if (response.header.contains("connection")) {
-            const std::string& responseConnectionHeaderValue{response.header["connection"]};
-            Helper::toLower(response.header["connection"]);
+            const std::string& responseConnectionHeaderValue{Helper::toLower(response.header["connection"])};
             keepAlive = responseConnectionHeaderValue != "close";
         } else {
             response.header["connection"] = "keep-alive";

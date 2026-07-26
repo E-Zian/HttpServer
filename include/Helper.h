@@ -37,7 +37,7 @@ void displayError(fmt::format_string<Args...> fmt_string, Args &&... args) {
 
 	std::vector<std::string> split(const std::string& text, char delimiter);
 
-	std::string toLower(std::string& text);
+	std::string toLower(std::string text);
 }
 
 #endif 
