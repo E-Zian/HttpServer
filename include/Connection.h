@@ -42,6 +42,7 @@ private:
 	const IDispatcher& dispatcher_;
 	RateLimiter& rateLimiter_;
 	CheckLimitResult checkLimitResult_{};
+	asio::streambuf requestReceivedBuffer_{Constants::maxBodySize};
 
 	Connection(tcp::socket&& connectionSocket,size_t connectionId,const IDispatcher& dispatcher, RateLimiter& rateLimiter, asio::ssl::context* sslContext = nullptr);
 

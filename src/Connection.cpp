@@ -63,42 +63,40 @@ namespace {
     }
 
     template<typename Stream>
-    Stream makeSocket(asio::ip::tcp::socket &&connectionSocket,asio::ssl::context *sslContext) {
-        if constexpr (std::is_same_v<Stream, asio::ssl::stream<asio::ip::tcp::socket>>) {
+    Stream makeSocket(asio::ip::tcp::socket &&connectionSocket, asio::ssl::context *sslContext) {
+        if constexpr (std::is_same_v<Stream, asio::ssl::stream<asio::ip::tcp::socket> >) {
             return {std::move(connectionSocket), *sslContext};
-        }else{
-        return {std::move(connectionSocket)};
-
+        } else {
+            return {std::move(connectionSocket)};
         }
     }
 }
 
 template<typename Stream>
-Connection<Stream>::Connection(tcp::socket&& connectionSocket, const size_t connectionId, const IDispatcher &dispatcher,
-                       RateLimiter &rateLimiter,asio::ssl::context* sslContext )
+Connection<Stream>::Connection(tcp::socket &&connectionSocket, const size_t connectionId, const IDispatcher &dispatcher,
+                               RateLimiter &rateLimiter, asio::ssl::context *sslContext)
     : clientIp_{connectionSocket.remote_endpoint().address().to_string()},
       port_{connectionSocket.lowest_layer().local_endpoint().port()},
       socket_{makeSocket<Stream>(std::move(connectionSocket), sslContext)},
       connectionId_{connectionId},
       totalRequests_{},
       dispatcher_(dispatcher),
-      rateLimiter_{rateLimiter}
-{
+      rateLimiter_{rateLimiter} {
 }
 
-template <typename Stream>
+template<typename Stream>
 Connection<Stream>::pointer Connection<Stream>::create(tcp::socket &&connectionSocket, const size_t connectionId,
-                                       const IDispatcher &dispatcher, RateLimiter &rateLimiter,
-                                        asio::ssl::context *sslContext) {
+                                                       const IDispatcher &dispatcher, RateLimiter &rateLimiter,
+                                                       asio::ssl::context *sslContext) {
     return pointer(new Connection(std::move(connectionSocket), connectionId, dispatcher, rateLimiter, sslContext));
 }
 
-template <typename Stream>
+template<typename Stream>
 Connection<Stream>::~Connection() {
     log("Connection ID ({}) Disconnected", connectionId_);
 }
 
-template <typename Stream>
+template<typename Stream>
 asio::awaitable<void> Connection<Stream>::handleRequest() {
     using namespace asio::experimental::awaitable_operators;
     auto self{this->shared_from_this()};
@@ -106,10 +104,10 @@ asio::awaitable<void> Connection<Stream>::handleRequest() {
     asio::steady_timer timeOutTimer{co_await asio::this_coro::executor};
 
     try {
-        if constexpr (std::is_same_v<Stream, asio::ssl::stream<asio::ip::tcp::socket>> ) {
+        if constexpr (std::is_same_v<Stream, asio::ssl::stream<asio::ip::tcp::socket> >) {
             co_await socket_.async_handshake(
-    asio::ssl::stream_base::server,   // we are the server side
-    asio::use_awaitable);
+                asio::ssl::stream_base::server, // we are the server side
+                asio::use_awaitable);
         }
 
         bool keepAlive{};
@@ -122,7 +120,8 @@ asio::awaitable<void> Connection<Stream>::handleRequest() {
 
             if (result.index() == 1) {
                 logError("Connection ({}) timed out", connectionId_);
-                co_await writeResponse(ResponseFactory::failedResponse(HttpStatus::REQUEST_TIMEOUT, "Request timed out") );
+                co_await writeResponse(
+                    ResponseFactory::failedResponse(HttpStatus::REQUEST_TIMEOUT, "Request timed out"));
                 co_return;
             }
             keepAlive = std::get<0>(result);
@@ -132,46 +131,32 @@ asio::awaitable<void> Connection<Stream>::handleRequest() {
     }
 }
 
-template <typename Stream>
+template<typename Stream>
 asio::awaitable<bool> Connection<Stream>::processRequest() {
     try {
+        constexpr size_t HEADER_DELIMITER_SIZE = 4;
+
         auto self{this->shared_from_this()};
 
         bool keepAlive{};
 
-        std::string requestReceived{};
-
         size_t currentHeaderSize{};
 
-        std::array<char, 128> receivingBuffer{};
+        const size_t bytesReadLen{
+            co_await asio::async_read_until(socket_, requestReceivedBuffer_, "\r\n\r\n", asio::use_awaitable)
+        };
+        currentHeaderSize += bytesReadLen;
 
-        std::optional<size_t> delimiterPosition{};
-        while (!delimiterPosition.has_value()) {
-            const size_t len{
-                co_await socket_.async_read_some(asio::buffer(receivingBuffer),
-                                                 asio::use_awaitable)
-            };
+        if (currentHeaderSize > Constants::maxHeaderSize) {
+            checkLimitResult_ = rateLimiter_.checkClientLimit(clientIp_);
+            logError(
+                "Header Length Received from Connection Id ({}) was too large, value received : {}", connectionId_,
+                currentHeaderSize);
 
-            currentHeaderSize += len;
-
-            if (currentHeaderSize > Constants::maxHeaderSize) {
-                checkLimitResult_ = rateLimiter_.checkClientLimit(clientIp_);
-                logError(
-                    "Header Length Received from Connection Id ({}) was too large, value received : {}", connectionId_,
-                    currentHeaderSize);
-
-                co_await writeResponse(
-                    ResponseFactory::failedResponse(HttpStatus::REQUEST_HEADERS_TOO_LARGE, "Header sent is too large"));
-                co_return false;
-            }
-
-            requestReceived.insert(requestReceived.end(), receivingBuffer.begin(),
-                                   receivingBuffer.begin() + static_cast<long long>(len));
-
-            delimiterPosition = parseRequestForDelimiter(
-                std::string_view(requestReceived.data(), requestReceived.size()));
+            co_await writeResponse(
+                ResponseFactory::failedResponse(HttpStatus::REQUEST_HEADERS_TOO_LARGE, "Header sent is too large"));
+            co_return false;
         }
-
 
         checkLimitResult_ = rateLimiter_.checkClientLimit(clientIp_);
         if (!checkLimitResult_.allow) {
@@ -182,16 +167,15 @@ asio::awaitable<bool> Connection<Stream>::processRequest() {
             co_return false;
         }
 
-        if (!delimiterPosition) {
-            co_await writeResponse(ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "Delimiter not found"));
-
-            co_return false;
-        }
-
         log("Headers Received from Connection Id ({})\n{}", connectionId_,
-                               std::string_view(requestReceived.data(), delimiterPosition.value()));
+            std::string(asio::buffers_begin(requestReceivedBuffer_.data()),
+                        asio::buffers_begin(requestReceivedBuffer_.data()) + bytesReadLen));
 
-        const auto rawHeader = std::string(requestReceived.data(), delimiterPosition.value());
+        const auto rawHeader = std::string(asio::buffers_begin(requestReceivedBuffer_.data()),
+                                           asio::buffers_begin(requestReceivedBuffer_.data()) + bytesReadLen -
+                                           HEADER_DELIMITER_SIZE);
+
+        requestReceivedBuffer_.consume(bytesReadLen);
 
         ParseResultObject parseResult{HttpRequestParser::parseHeader(rawHeader)};
 
@@ -233,29 +217,21 @@ asio::awaitable<bool> Connection<Stream>::processRequest() {
                 co_return false;
             }
 
-            std::array<char, 128> receivingBodyBuffer{};
-            constexpr size_t HEADER_DELIMITER_SIZE = 4;
-            while (requestReceived.size() < contentLength + rawHeader.size() + HEADER_DELIMITER_SIZE) {
-                const size_t len{
-                    co_await socket_.async_read_some(asio::buffer(receivingBodyBuffer),
-                                                     asio::use_awaitable)
-                };
-
-
-                requestReceived.insert(requestReceived.end(), receivingBodyBuffer.begin(),
-                                       receivingBodyBuffer.begin() + static_cast<long long>(len));
+            if (requestReceivedBuffer_.size() < contentLength) {
+                co_await asio::async_read(
+                    socket_, requestReceivedBuffer_,
+                    asio::transfer_exactly(contentLength - requestReceivedBuffer_.size()),
+                    asio::use_awaitable);
             }
-            log("requestReceived.size()={}, header.size()={}, delimiterPos={}, contentLength={}",
-                                   requestReceived.size(), rawHeader.size(), delimiterPosition.value(),
-                                   contentLength);
 
+            parseResult.parseRequestObject.body = std::string(asio::buffers_begin(requestReceivedBuffer_.data()),
+                                                              asio::buffers_begin(requestReceivedBuffer_.data()) +
+                                                              static_cast<std::ptrdiff_t>(contentLength));
 
-            parseResult.parseRequestObject.body = std::string(
-                &requestReceived[delimiterPosition.value() + static_cast<size_t>(HEADER_DELIMITER_SIZE)],
-                contentLength);
+            requestReceivedBuffer_.consume(contentLength);
 
             log("Body Received from Connection Id ({})\n{}", connectionId_,
-                                   parseResult.parseRequestObject.body);
+                parseResult.parseRequestObject.body);
         }
 
         Response response{dispatcher_.dispatch(parseResult.parseRequestObject)};
@@ -268,7 +244,7 @@ asio::awaitable<bool> Connection<Stream>::processRequest() {
 
 
         if (response.header.contains("connection")) {
-            const std::string& responseConnectionHeaderValue{Helper::toLower(response.header["connection"])};
+            const std::string &responseConnectionHeaderValue{Helper::toLower(response.header["connection"])};
             keepAlive = responseConnectionHeaderValue != "close";
         } else {
             response.header["connection"] = "keep-alive";
@@ -284,12 +260,12 @@ asio::awaitable<bool> Connection<Stream>::processRequest() {
 
         co_return keepAlive;
     } catch (std::exception &e) {
-        logError("{}", e.what());
+        logError("error at connection level {}", e.what());
         co_return false;
     }
 }
 
-template <typename Stream>
+template<typename Stream>
 asio::awaitable<void> Connection<Stream>::writeResponse(Response response) {
     auto self{this->shared_from_this()};
 
@@ -305,4 +281,4 @@ asio::awaitable<void> Connection<Stream>::writeResponse(Response response) {
 }
 
 template class Connection<asio::ip::tcp::socket>;
-template class Connection<asio::ssl::stream<asio::ip::tcp::socket>>;
+template class Connection<asio::ssl::stream<asio::ip::tcp::socket> >;
