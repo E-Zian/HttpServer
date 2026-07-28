@@ -28,7 +28,7 @@ UserController::UserController(Router &router, const IUserRepo& repo) : Controll
 
 Response UserController::createUser(const ParsedRequestObject &request) const {
     try {
-        Response response;
+        Response response{ ResponseFactory::baseSuccessResponse() };
 
         const nlohmann::json receivedJson = nlohmann::json::parse(request.body);
         if (!receivedJson.contains("user")) {
@@ -47,11 +47,10 @@ Response UserController::createUser(const ParsedRequestObject &request) const {
         json["message"] = "User created successfully";
         response.body = json.dump();
 
-        response.status = HttpStatus::OK;
-        response.header["content-type"] = "application/json";
         response.header["content-length"] = std::to_string(response.body.length());
 
         return response;
+
     }  catch (const nlohmann::json::exception& e) {
         Helper::displayError("{}", e.what());
         return ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "Invalid JSON body");
@@ -64,7 +63,7 @@ Response UserController::createUser(const ParsedRequestObject &request) const {
 
 Response UserController::getAllUsers(const ParsedRequestObject &request) const {
     try {
-        Response response;
+        Response response{ ResponseFactory::baseSuccessResponse() };
 
         const std::optional<std::vector<UserModel::User> > userList{repo_.getAllUser()};
 
@@ -78,11 +77,10 @@ Response UserController::getAllUsers(const ParsedRequestObject &request) const {
         json["message"] = fmt::format("Total {} users retrieved", userList.value().size());
         response.body = json.dump();
 
-        response.status = HttpStatus::OK;
-        response.header["content-type"] = "application/json";
         response.header["content-length"] = std::to_string(response.body.length());
 
         return response;
+
     } catch (const std::exception &e) {
         Helper::displayError("{}", e.what());
         return ResponseFactory::failedResponse(HttpStatus::SERVER_ERROR, "An unexpected error has occurred");
@@ -91,8 +89,18 @@ Response UserController::getAllUsers(const ParsedRequestObject &request) const {
 
 Response UserController::getUser(const ParsedRequestObject &request) const {
     try {
-        Response response;
-        const int id{std::stoi(request.parameterValues.at(":id"))};
+        Response response{ ResponseFactory::baseSuccessResponse() };
+
+        const std::string& idString{ request.parameterValues.at(":id") };
+        int id{};
+        const auto [ptr, ec] {
+            std::from_chars(idString.data(), idString.data() + idString.size(),
+                id)
+            };
+
+        if (ec != std::errc{} || ptr != idString.data() + idString.size()) {
+            return ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "Invalid id data type: {}", std::make_error_code(ec).message());
+        }
 
         const std::optional<UserModel::User> user{repo_.getUserById(id)};
 
@@ -106,8 +114,6 @@ Response UserController::getUser(const ParsedRequestObject &request) const {
 
         response.body = json.dump();
 
-        response.status = HttpStatus::OK;
-        response.header["content-type"] = "application/json";
         response.header["content-length"] = std::to_string(response.body.length());
 
         return response;
@@ -128,8 +134,19 @@ Response UserController::getUser(const ParsedRequestObject &request) const {
 
 Response UserController::updateUser(const ParsedRequestObject &request) const {
     try {
-        Response response;
-        const int id{std::stoi(request.parameterValues.at(":id"))};
+        Response response{ ResponseFactory::baseSuccessResponse() };
+
+        const std::string& idString{ request.parameterValues.at(":id") };
+        int id{};
+        const auto [ptr, ec] {
+            std::from_chars(idString.data(), idString.data() + idString.size(),
+                id)
+            };
+
+        if (ec != std::errc{} || ptr != idString.data() + idString.size()) {
+            return ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "Invalid id data type: {}", std::make_error_code(ec).message());
+        }
+
 
         const nlohmann::json receivedJson = nlohmann::json::parse(request.body);
 
@@ -153,8 +170,6 @@ Response UserController::updateUser(const ParsedRequestObject &request) const {
         json["message"] = "User updated successfully";
         response.body = json.dump();
 
-        response.status = HttpStatus::OK;
-        response.header["content-type"] = "application/json";
         response.header["content-length"] = std::to_string(response.body.length());
 
         return response;
@@ -177,8 +192,19 @@ Response UserController::updateUser(const ParsedRequestObject &request) const {
 
 Response UserController::deleteUser(const ParsedRequestObject &request) const {
     try {
-        Response response;
-        const int id{std::stoi(request.parameterValues.at(":id"))};
+        Response response{ ResponseFactory::baseSuccessResponse() };
+
+        const std::string& idString{ request.parameterValues.at(":id") };
+        int id{};
+        const auto [ptr, ec] {
+            std::from_chars(idString.data(), idString.data() + idString.size(),
+                id)
+            };
+
+        if (ec != std::errc{} || ptr != idString.data() + idString.size()) {
+            return ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "Invalid id data type: {}", std::make_error_code(ec).message());
+        }
+
 
         if (!repo_.deleteUserById(id)) {
             return ResponseFactory::failedResponse(HttpStatus::NOT_FOUND, "User id {} does not exists", id);
@@ -189,8 +215,6 @@ Response UserController::deleteUser(const ParsedRequestObject &request) const {
         json["message"] = fmt::format("User id {} deleted successfully", id);
         response.body = json.dump();
 
-        response.status = HttpStatus::OK;
-        response.header["content-type"] = "application/json";
         response.header["content-length"] = std::to_string(response.body.length());
 
         return response;

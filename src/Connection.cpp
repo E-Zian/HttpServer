@@ -10,17 +10,6 @@
 #include "HttpRequestParser.h"
 
 namespace {
-    std::optional<size_t> parseRequestForDelimiter(std::string_view buffer) {
-        const std::string delimiter{"\r\n\r\n"};
-        const size_t delimiterPosition{buffer.find(delimiter)};
-
-        if (delimiterPosition == std::string::npos) {
-            return std::nullopt;
-        }
-
-        return delimiterPosition;
-    }
-
 
     std::string statusToStatusLine(const HttpStatus status) {
         const std::string httpVersion{"HTTP/1.1 "};
@@ -192,16 +181,15 @@ asio::awaitable<bool> Connection<Stream>::processRequest() {
         // Has Body
         if (parseResult.parseRequestObject.header.contains("content-length")) {
             size_t contentLength{};
-            const std::string &contentLentString{parseResult.parseRequestObject.header["content-length"]};
+            const std::string &contentLengthString{parseResult.parseRequestObject.header["content-length"]};
             const auto [ptr, ec]{
-                std::from_chars(contentLentString.data(), contentLentString.data() + contentLentString.size(),
+                std::from_chars(contentLengthString.data(), contentLengthString.data() + contentLengthString.size(),
                                 contentLength)
             };
 
-            if (ec != std::errc{} || ptr != contentLentString.data() + contentLentString.size()) {
+            if (ec != std::errc{} || ptr != contentLengthString.data() + contentLengthString.size()) {
                 co_await writeResponse(
-                    ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "Invalid Content-Length: {}",
-                                                    contentLentString));
+                    ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "Invalid Content-Length: {}",contentLengthString));
                 co_return false;
             }
 

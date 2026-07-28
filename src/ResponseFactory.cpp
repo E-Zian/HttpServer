@@ -32,3 +32,10 @@ Response ResponseFactory::dummyJson() {
 
     return response;
 }
+
+Response ResponseFactory::baseSuccessResponse() {
+    Response response{ HttpStatus::OK ,{},{} };
+    response.addHeader("content-type", "application/json");
+
+    return response;
+}

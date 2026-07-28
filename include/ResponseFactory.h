@@ -32,6 +32,7 @@ namespace ResponseFactory {
 		return response;
 	}
 
+	Response baseSuccessResponse();
 
 }
 

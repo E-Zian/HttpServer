@@ -29,7 +29,7 @@ PokemonController::PokemonController(Router &router, const IPokemonRepo&repo) : 
 
 Response PokemonController::getAllPokemon(const ParsedRequestObject &request) const {
     try {
-        Response response{HttpStatus::OK, {}, {}};
+        Response response{ ResponseFactory::baseSuccessResponse()};
 
         nlohmann::json json;
         const std::optional<std::vector<PokemonModel::Pokemon> > pokemons{repo_.getAllPokemon()};
@@ -42,7 +42,6 @@ Response PokemonController::getAllPokemon(const ParsedRequestObject &request) co
         json["message"] = fmt::format("Total Pokemons Retrieved {}", pokemons->size());
 
         response.body = json.dump();
-        response.header["Content-Type"] = "application/json";
         response.header["Content-Length"] = std::to_string(response.body.size());
 
         return response;
@@ -54,7 +53,7 @@ Response PokemonController::getAllPokemon(const ParsedRequestObject &request) co
 
 Response PokemonController::createPokemon(const ParsedRequestObject &request) const {
     try {
-        Response response{HttpStatus::OK, {}, {}};
+        Response response{ ResponseFactory::baseSuccessResponse() };
 
         nlohmann::json receivedJson = nlohmann::json::parse(request.body);
 
@@ -75,7 +74,6 @@ Response PokemonController::createPokemon(const ParsedRequestObject &request) co
         json["message"] = "Pokemon created successfully";
 
         response.body = json.dump();
-        response.header["Content-Type"] = "application/json";
         response.header["Content-Length"] = std::to_string(response.body.size());
 
         return response;
@@ -99,12 +97,21 @@ Response PokemonController::createPokemon(const ParsedRequestObject &request) co
 
 Response PokemonController::getPokemon(const ParsedRequestObject &request) const {
     try {
-        Response response{HttpStatus::OK, {}, {}};
+        Response response{ ResponseFactory::baseSuccessResponse() };
 
         if (!request.parameterValues.contains(":id")) {
             return ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "No pokemon id was passed");
         }
-        int id{std::stoi(request.parameterValues.at(":id"))};
+        const std::string& idString{ request.parameterValues.at(":id") };
+        int id{};
+        const auto [ptr, ec] {
+            std::from_chars(idString.data(), idString.data() + idString.size(),
+                id)
+            };
+
+        if (ec != std::errc{} || ptr != idString.data() + idString.size()) {
+            return ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "Invalid id data type: {}", std::make_error_code(ec).message());
+        }
 
         const std::optional<PokemonModel::Pokemon> pokemon{repo_.getPokemonById(id)};
 
@@ -116,7 +123,6 @@ Response PokemonController::getPokemon(const ParsedRequestObject &request) const
         json["pokemon"] = *pokemon;
         json["message"] = "Pokemon found successfully";
         response.body = json.dump();
-        response.header["Content-Type"] = "application/json";
         response.header["Content-Length"] = std::to_string(response.body.size());
 
         return response;
@@ -139,12 +145,23 @@ Response PokemonController::getPokemon(const ParsedRequestObject &request) const
 
 Response PokemonController::updatePokemon(const ParsedRequestObject &request) const {
     try {
-        Response response{HttpStatus::OK, {}, {}};
+        Response response{ ResponseFactory::baseSuccessResponse() };
 
         if (!request.parameterValues.contains(":id")) {
             return ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "No pokemon id was passed");
         }
-        const int id{std::stoi(request.parameterValues.at(":id"))};
+        
+        const std::string& idString{ request.parameterValues.at(":id") };
+        int id{};
+        const auto [ptr, ec] {
+            std::from_chars(idString.data(), idString.data() + idString.size(),
+                id)
+            };
+
+        if (ec != std::errc{} || ptr != idString.data() + idString.size()) {
+            return ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "Invalid id data type: {}", std::make_error_code(ec).message());
+        }
+
         const nlohmann::json receivedJson = nlohmann::json::parse(request.body);
 
         if (!receivedJson.contains("pokemon")) {
@@ -164,7 +181,6 @@ Response PokemonController::updatePokemon(const ParsedRequestObject &request) co
         json["pokemon"] = *updatedPokemon;
         json["message"] = "Pokemon updated successfully";
         response.body = json.dump();
-        response.header["Content-Type"] = "application/json";
         response.header["Content-Length"] = std::to_string(response.body.size());
 
         return response;
@@ -187,13 +203,24 @@ Response PokemonController::updatePokemon(const ParsedRequestObject &request) co
 
 Response PokemonController::deletePokemon(const ParsedRequestObject &request) const {
     try {
-        Response response{HttpStatus::OK, {}, {}};
+        Response response{ ResponseFactory::baseSuccessResponse() };
 
         if (!request.parameterValues.contains(":id")) {
             return ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "No pokemon id was passed");
         }
 
-        const int id{std::stoi(request.parameterValues.at(":id"))};
+        const std::string& idString{ request.parameterValues.at(":id") };
+
+        int id{};
+        const auto [ptr, ec] {
+            std::from_chars(idString.data(), idString.data() + idString.size(),
+                id)
+            };
+
+        if (ec != std::errc{} || ptr != idString.data() + idString.size()) {
+            return ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "Invalid id data type: {}", std::make_error_code(ec).message());
+        }
+
 
         if (!repo_.deletePokemonById(id)) {
             return ResponseFactory::failedResponse(HttpStatus::NOT_FOUND, "pokemon with id {} not found", id);
@@ -202,7 +229,6 @@ Response PokemonController::deletePokemon(const ParsedRequestObject &request) co
         nlohmann::json json;
         json["message"] = fmt::format("Pokemon id {} deleted successfully", id);
         response.body = json.dump();
-        response.header["Content-Type"] = "application/json";
         response.header["Content-Length"] = std::to_string(response.body.size());
 
         return response;
