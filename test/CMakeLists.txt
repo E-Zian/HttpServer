@@ -3,6 +3,10 @@ cmake_minimum_required(VERSION 3.10)
 set(Sources
         UserControllerTest.cpp
         PokemonControllerTest.cpp
+        HttpRequestParserTest.cpp
+        RateLimiterTest.cpp
+        RouterTest.cpp
+        HelperTest.cpp
         main.cpp
 )
 

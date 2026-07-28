@@ -3,6 +3,7 @@
 #include "Helper.h"
 #include "ResponseFactory.h"
 #include "model/PokemonModel.h"
+#include <charconv>
 
 UserController::UserController(Router &router, const IUserRepo& repo) : ControllerBase(router), repo_{repo} {
     router_.addRoute(Method::GET, "/api/user", [this](const ParsedRequestObject &request) {
