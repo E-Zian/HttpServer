@@ -118,14 +118,6 @@ Response UserController::getUser(const ParsedRequestObject &request) const {
         response.header["content-length"] = std::to_string(response.body.length());
 
         return response;
-    } catch (const std::invalid_argument &e) {
-        Helper::displayError("{}", e.what());
-
-        return ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "Invalid user id");
-    } catch (const std::out_of_range &e) {
-        Helper::displayError("{}", e.what());
-
-        return ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "Invalid user id");
     }
     catch (const std::exception &e) {
         Helper::displayError("{}", e.what());
@@ -177,14 +169,6 @@ Response UserController::updateUser(const ParsedRequestObject &request) const {
     } catch (const nlohmann::json::exception& e) {
         Helper::displayError("{}", e.what());
         return ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "Invalid JSON body");
-    }catch (const std::invalid_argument &e) {
-        Helper::displayError("{}", e.what());
-
-        return ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "Invalid user id");
-    } catch (const std::out_of_range &e) {
-        Helper::displayError("{}", e.what());
-
-        return ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "Invalid user id");
     }  catch (const std::exception &e) {
         Helper::displayError("{}", e.what());
         return ResponseFactory::failedResponse(HttpStatus::SERVER_ERROR, "An unexpected error has occurred");
@@ -219,10 +203,6 @@ Response UserController::deleteUser(const ParsedRequestObject &request) const {
         response.header["content-length"] = std::to_string(response.body.length());
 
         return response;
-    } catch (const std::invalid_argument &) {
-        return ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "Invalid user id");
-    } catch (const std::out_of_range &) {
-        return ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "Invalid user id");
     } catch (const std::exception &e) {
         Helper::displayError("{}", e.what());
         return ResponseFactory::failedResponse(HttpStatus::SERVER_ERROR, "An unexpected error had occurred in the server");

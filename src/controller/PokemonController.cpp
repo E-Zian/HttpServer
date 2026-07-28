@@ -127,17 +127,7 @@ Response PokemonController::getPokemon(const ParsedRequestObject &request) const
 
         return response;
 
-    } catch (const std::invalid_argument& e) {
-        Helper::displayError("{}", e.what());
-
-        return ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "Invalid pokemon id");
-
-    } catch (const std::out_of_range& e) {
-        Helper::displayError("{}", e.what());
-
-        return ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "Invalid pokemon id");
-
-    }catch (const std::exception &e) {
+    } catch (const std::exception &e) {
         Helper::displayError("{}", e.what());
         return ResponseFactory::failedResponse(HttpStatus::SERVER_ERROR, "An unexpected error had occurred in the server");
     }
@@ -184,13 +174,7 @@ Response PokemonController::updatePokemon(const ParsedRequestObject &request) co
         response.header["Content-Length"] = std::to_string(response.body.size());
 
         return response;
-    } catch (const std::invalid_argument &) {
-        return ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "Invalid pokemon id");
-
-    } catch (const std::out_of_range &) {
-        return ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "Invalid pokemon id");
-
-    } catch (const nlohmann::json::exception &e) {
+    }catch (const nlohmann::json::exception &e) {
         Helper::displayError("{}", e.what());
         return ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "Invalid request data");
 
@@ -232,12 +216,6 @@ Response PokemonController::deletePokemon(const ParsedRequestObject &request) co
         response.header["Content-Length"] = std::to_string(response.body.size());
 
         return response;
-    } catch (const std::invalid_argument &) {
-        return ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "Invalid pokemon id");
-
-    } catch (const std::out_of_range &) {
-        return ResponseFactory::failedResponse(HttpStatus::BAD_REQUEST, "Invalid pokemon id");
-
     } catch (const std::exception &e) {
         Helper::displayError("{}", e.what());
         return ResponseFactory::failedResponse(HttpStatus::SERVER_ERROR, "An unexpected error had occurred in the server");
