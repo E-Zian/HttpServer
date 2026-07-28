@@ -4,7 +4,6 @@
 #include "repository/PokemonRepo.h"
 #include "controller/PokemonController.h"
 #include "RateLimiter.h"
-#include "AssetManager.h"
 #include "controller/UserController.h"
 #include "repository/UserRepo.h"
 #include "database/database.h"
@@ -34,10 +33,6 @@ int main() {
         asio::ssl::context sslContext{asio::ssl::context::tls_server};
         sslContext.use_certificate_chain_file("server.crt");
         sslContext.use_private_key_file("server.key", asio::ssl::context::pem);
-
-        // Asset Manager
-        // AssetManager& assetManager {AssetManager::getInstance()};
-        // assetManager.loadAsset("assets/images/quagsire.ico","image/x-icon",);
 
         constexpr double maxBucketTokenCapacity{100.0};
         constexpr double tokenRefillPerSec{ 1.0 };

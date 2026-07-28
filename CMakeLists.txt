@@ -30,7 +30,6 @@ set(Headers
         include/RateLimiter.h 
         "include/Interface/IPokemonRepo.h" 
         "include/Interface/IUserRepo.h"
-        include/AssetManager.h 
         "include/HttpRequestParser.h"
 
 )
@@ -49,7 +48,6 @@ set(SourcesNoMain
         "src/controller/UserController.cpp" 
         "src/controller/PokemonController.cpp"
         src/controller/HomeController.cpp
-        src/AssetManager.cpp
         "src/HttpRequestParser.cpp" 
         src/RateLimiter.cpp
 )
