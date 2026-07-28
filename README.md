@@ -1,8 +1,49 @@
 # HTTP/HTTPS Server
 
-A HTTP and HTTPS server written in C++ using ASIO for networking.
-It runs a plaintext HTTP listener and a TLS-encrypted HTTPS listener side by
-side on separate ports.
+> An asynchronous HTTP/1.1 and HTTPS server in modern C++20 - 
+> includes HTTP parser, coroutine-based networking on a thread pool,
+> TLS, per-IP rate limiting, and a REST API backed by SQLite. Sustains **~14,900
+> requests/sec** with a p99 latency of **6.1 ms** on a local load test.
+
+Two listeners run side by side on separate ports and share the same routes.
+Everything from raw byte parsing to JSON responses is built directly on
+[Asio](https://think-async.com/Asio/).
+
+### Architecture
+
+```text
+                 HTTP :6767                HTTPS :6969
+                     │                          │
+                     ▼                          ▼
+              ┌───────────────────────────────────────┐
+              │  Server<Stream>  (Asio acceptor loop)  │   io_context driven by
+              │  co_spawn a Connection per socket      │   a std::jthread pool
+              └───────────────────────────────────────┘
+                                  │
+                                  ▼
+        ┌─────────────────────────────────────────────────────┐
+        │  Connection<Stream>  (coroutine)                     │
+        │  read → rate-limit → parse → dispatch → write        │
+        │  keep-alive · timeouts · header/body size limits     │
+        └─────────────────────────────────────────────────────┘
+             │                              │
+             ▼                              ▼
+     ┌───────────────┐            ┌──────────────────────┐
+     │ RateLimiter   │            │ Router (trie)        │
+     │ token bucket  │            │ path params (/:id)   │
+     │ per client IP │            └──────────────────────┘
+     └───────────────┘                       │
+                                              ▼
+                               ┌──────────────────────────┐
+                               │ Controllers              │
+                               │ (User, Pokemon)          │
+                               └──────────────────────────┘
+                                              │  depends on interface
+                                              ▼
+                               ┌──────────────────────────┐
+                               │ Repository  (IUserRepo…)  │──► SQLite
+                               └──────────────────────────┘
+```
 
 ## Features
 
