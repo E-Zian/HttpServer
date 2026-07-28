@@ -161,12 +161,12 @@ non-numeric id returns `400`, and a user that does not exist returns `404`.
 
 Request:
 ```json
-{ "pokemon": { "name": "pikachu" } }
+{ "pokemon": { "name": "quagsire" } }
 ```
 Response `200 OK`:
 ```json
 {
-  "pokemon": { "id": 1, "name": "pikachu" },
+  "pokemon": { "id": 1, "name": "quagsire" },
   "message": "Pokemon created successfully"
 }
 ```
