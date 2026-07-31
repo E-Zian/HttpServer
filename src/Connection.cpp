@@ -240,6 +240,7 @@ asio::awaitable<bool> Connection<Stream>::processRequest() {
             keepAlive = true;
         }
 
+
         if (keepAlive) {
             log("Connection id {} kept alive", connectionId_);
         }

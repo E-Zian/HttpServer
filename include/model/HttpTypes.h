@@ -25,6 +25,8 @@ struct ParsedRequestObject {
 	std::unordered_map<std::string, std::string> header{};
     std::string body;
     std::unordered_map<std::string, std::string> parameterValues{};
+    std::unordered_map<std::string, std::string> queryStringValues{};
+    std::vector<std::string> queryStringFlags{};
 
 };
 
