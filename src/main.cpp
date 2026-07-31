@@ -44,9 +44,9 @@ int main() {
         const PokemonRepo pokemonRepo{db};
         const UserRepo userRepo{db};
 
-        TestingController testingController{router};
-        PokemonController pokemonController{router, pokemonRepo};
-        UserController userController{router, userRepo};
+        [[maybe_unused]] TestingController testingController{router};
+        [[maybe_unused]] PokemonController pokemonController{router, pokemonRepo};
+        [[maybe_unused]] UserController userController{router, userRepo};
 
         int HttpPort{6767};
         Server<asio::ip::tcp::socket> httpServer(io, HttpPort, router, rateLimiter);
