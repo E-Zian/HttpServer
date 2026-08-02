@@ -62,6 +62,7 @@ namespace {
 
     struct ParsedRouteResult {
         std::unordered_map<std::string, std::string> queryStrings{};
+        std::vector<std::string> queryFlags{};
         std::string route;
     };
 
@@ -78,16 +79,15 @@ namespace {
             for (std::vector<std::string> queryStringComponents{Helper::split(std::string(queryStringSection), '&')};
                  auto &component: queryStringComponents) {
 
-                //change here need find a way to check if its a flag or equal
-                const size_t delimiterPos{component.find('=')};
-                if (delimiterPos == std::string::npos) {
-                    // fuck la need valueless for flags
-                    throw std::invalid_argument("Malformed query string");
-                }
-                std::string key{component.substr(0, delimiterPos)};
-                std::string value{component.substr(delimiterPos + 1)};
-
+                if (const size_t delimiterPos{component.find('=')}; delimiterPos == std::string::npos) {
+                    parsedRouteResult.queryFlags.push_back(component);
+                }else {
+                    std::string key{component.substr(0, delimiterPos)};
+                    std::string value{component.substr(delimiterPos + 1)};
                 parsedRouteResult.queryStrings[std::move(key)] = std::move(value);
+
+                }
+
             }
 
             parsedRouteResult.route = std::string(route.substr(0, queryStringDelimiterPos));
