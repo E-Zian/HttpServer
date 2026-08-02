@@ -78,6 +78,7 @@ namespace {
             for (std::vector<std::string> queryStringComponents{Helper::split(std::string(queryStringSection), '&')};
                  auto &component: queryStringComponents) {
 
+                //change here need find a way to check if its a flag or equal
                 const size_t delimiterPos{component.find('=')};
                 if (delimiterPos == std::string::npos) {
                     // fuck la need valueless for flags
