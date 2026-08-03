@@ -125,7 +125,10 @@ ParseResultObject HttpRequestParser::parseHeader(const std::string_view rawHeade
     }
 
     parseResult.parseRequestObject.method = methodIt->second;
-    parseResult.parseRequestObject.route = std::string(requestLineComponents.value()[1]);
+    ParsedRouteResult parsedRouteResult{ parseRoute(requestLineComponents.value()[1])};
+    parseResult.parseRequestObject.route = parsedRouteResult.route;
+    parseResult.parseRequestObject.queryStringFlags = parsedRouteResult.queryFlags;
+    parseResult.parseRequestObject.queryStringValues = parsedRouteResult.queryStrings;
     parseResult.parseRequestObject.httpVersion = std::string(requestLineComponents.value()[2]);
 
 
